@@ -71,7 +71,8 @@ void Error_Handler(void);
 #define TCK_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-
+#define TMC5240_CS_Pin GPIO_PIN_4
+#define TMC5240_CS_GPIO_Port GPIOA
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
