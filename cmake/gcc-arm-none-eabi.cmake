@@ -93,4 +93,4 @@ set(CMAKE_CXX_FLAGS_INIT "${COMMON_FLAGS}")
 set(CMAKE_ASM_FLAGS_INIT "${COMMON_FLAGS}")
 
 # Linker flags
-set(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,--gc-sections -specs=nano.specs -specs=nosys.specs")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,--gc-sections -specs=nano.specs -specs=nosys.specs -T\"${CMAKE_SOURCE_DIR}/STM32L476XX_FLASH.ld\"")

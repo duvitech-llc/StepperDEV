@@ -69,6 +69,27 @@
             "problemMatcher": [
                 "$gcc"
             ]
+        },
+        {
+            "label": "Flash Firmware",
+            "type": "shell",
+            "command": "openocd",
+            "args": [
+                "-f",
+                "interface/stlink.cfg",
+                "-f",
+                "target/stm32l4x.cfg",
+                "-c",
+                "program build/Debug/StepperDEV.hex reset exit"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "dependsOn": [
+                "CMake: Build (Debug)"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
         }
     ]
 }

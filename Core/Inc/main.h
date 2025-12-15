@@ -73,6 +73,9 @@ void Error_Handler(void);
 #define TCK_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
+extern CRC_HandleTypeDef hcrc;
+extern UART_HandleTypeDef huart2;
+#define DEBUG_UART huart2
 
 /* USER CODE END Private defines */
 

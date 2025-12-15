@@ -22,6 +22,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "tmc5240.h"
+#include "logging.h"
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+#include <util.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -106,11 +111,16 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
+  DWT_Init();
+  init_dma_logging();
+  printf("\033c");
+  printf("Stepper Demo\r\n\r\n");
+  printf("CPU Clock Frequency: %lu MHz\r\n", HAL_RCC_GetSysClockFreq() / 1000000);
 
   if (tmc5240_init() != 0) {
       // handle communication error
   }
-
+    
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -120,6 +130,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    HAL_Delay(100);
+    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
   }
   /* USER CODE END 3 */
 }
@@ -415,7 +427,18 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
 
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart->Instance == USART2)
+	{
+		logging_UART_TxCpltCallback(huart);
+	}
+}
 /* USER CODE END 4 */
 
 /**
