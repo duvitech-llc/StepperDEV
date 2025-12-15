@@ -12,7 +12,7 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "arm-none-eabi-gdb",
+            "miDebuggerPath": "gdb-multiarch",
             "debugServerPath": "openocd",
             "debugServerArgs": "-f interface/stlink.cfg -f target/stm32l4x.cfg",
             "serverStarted": "Info : Listening on port [0-9]+ for gdb connection",
@@ -35,10 +35,10 @@
                     "ignoreFailures": false
                 }
             ],
-            "preLaunchTask": "Flash Firmware",
+            "preLaunchTask": "CMake: Build (Debug)",
             "postDebugTask": "",
             "linux": {
-                "miDebuggerPath": "/usr/bin/arm-none-eabi-gdb",
+                "miDebuggerPath": "/usr/bin/gdb-multiarch",
                 "debugServerPath": "/usr/bin/openocd"
             },
             "windows": {
@@ -52,7 +52,7 @@
             "request": "attach",
             "program": "${workspaceFolder}/build/Debug/StepperDEV",
             "MIMode": "gdb",
-            "miDebuggerPath": "arm-none-eabi-gdb",
+            "miDebuggerPath": "gdb-multiarch",
             "miDebuggerServerAddress": "localhost:3333",
             "cwd": "${workspaceFolder}",
             "setupCommands": [
@@ -63,7 +63,7 @@
                 }
             ],
             "linux": {
-                "miDebuggerPath": "/usr/bin/arm-none-eabi-gdb"
+                "miDebuggerPath": "/usr/bin/gdb-multiarch"
             },
             "windows": {
                 "miDebuggerPath": "arm-none-eabi-gdb.exe"
