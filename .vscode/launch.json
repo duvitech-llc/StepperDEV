@@ -1,0 +1,73 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug (OpenOCD)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/StepperDEV",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "arm-none-eabi-gdb",
+            "debugServerPath": "openocd",
+            "debugServerArgs": "-f interface/stlink.cfg -f target/stm32l4x.cfg",
+            "serverStarted": "Info : Listening on port [0-9]+ for gdb connection",
+            "filterStderr": true,
+            "filterStdout": false,
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Connect to target",
+                    "text": "target extended-remote localhost:3333",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Reset and halt target",
+                    "text": "monitor reset halt",
+                    "ignoreFailures": false
+                }
+            ],
+            "preLaunchTask": "Flash Firmware",
+            "postDebugTask": "",
+            "linux": {
+                "miDebuggerPath": "/usr/bin/arm-none-eabi-gdb",
+                "debugServerPath": "/usr/bin/openocd"
+            },
+            "windows": {
+                "miDebuggerPath": "arm-none-eabi-gdb.exe",
+                "debugServerPath": "openocd.exe"
+            }
+        },
+        {
+            "name": "Attach (OpenOCD)",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${workspaceFolder}/build/Debug/StepperDEV",
+            "MIMode": "gdb",
+            "miDebuggerPath": "arm-none-eabi-gdb",
+            "miDebuggerServerAddress": "localhost:3333",
+            "cwd": "${workspaceFolder}",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "linux": {
+                "miDebuggerPath": "/usr/bin/arm-none-eabi-gdb"
+            },
+            "windows": {
+                "miDebuggerPath": "arm-none-eabi-gdb.exe"
+            }
+        }
+    ]
+}
