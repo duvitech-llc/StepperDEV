@@ -24,7 +24,8 @@
                 "--target",
                 "all",
                 "-j",
-                "10"
+                "10",
+                "--verbose"
             ],
             "group": {
                 "kind": "build",
