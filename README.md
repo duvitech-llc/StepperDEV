@@ -214,18 +214,12 @@ openocd -f interface/stlink.cfg -f target/stm32l4x.cfg `
 
 #### Available Debug Configurations:
 
-1. **Debug (Flash and Run)** - Recommended
-   - Flashes firmware, then starts debugging
-   - Uses Cortex-Debug extension
-   - Stops at `main()`
-   - Includes SVD file for peripheral register viewing
-
-2. **Debug (OpenOCD)**
+1. **Debug (OpenOCD)** - Recommended
    - Flashes firmware using cppdbg debugger
    - Alternative to Cortex-Debug
    - Stops at entry point
 
-3. **Attach (OpenOCD)** / **Attach (Cortex-Debug)**
+3. **Attach (OpenOCD)**
    - Attach to already-running firmware
    - Useful when firmware is already flashed
 
