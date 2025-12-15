@@ -23,9 +23,9 @@ typedef enum {
  *  separate file (e.g. platform_stm32.c) that implements the low‑level
  *  SPI/UART peripheral handling for the STM32F4.
  * ------------------------------------------------------------------------- */
-extern int8_t platform_spi_write(uint8_t address, const uint8_t *data,
+extern int8_t tmc5240_platform_spi_write(uint8_t address, const uint8_t *data,
                                          size_t length);
-extern int8_t platform_spi_read (uint8_t address, uint8_t *data,
+extern int8_t tmc5240_platform_spi_read (uint8_t address, uint8_t *data,
                                          size_t length);
 
 /* -------------------------------------------------------------------------

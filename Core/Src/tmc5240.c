@@ -39,7 +39,7 @@ int8_t tmc5240_write_reg(tmc5240_reg_t reg, const uint8_t *buf, size_t len)
 {
     if (len == 0 || buf == NULL) return -1;
     uint8_t addr = TMC5240_REG_ADDR_WRITE(reg);   /* add 0x80 for write [1] */
-    return platform_spi_write(addr, buf, len);
+    return tmc5240_platform_spi_write(addr, buf, len);
 }
 
 /* Read an arbitrary number of bytes from a register */
@@ -47,7 +47,7 @@ int8_t tmc5240_read_reg(tmc5240_reg_t reg, uint8_t *buf, size_t len)
 {
     if (len == 0 || buf == NULL) return -1;
     uint8_t addr = TMC5240_REG_ADDR_READ(reg);
-    return platform_spi_read(addr, buf, len);
+    return tmc5240_platform_spi_read(addr, buf, len);
 }
 
 /* -------------------------------------------------------------------------

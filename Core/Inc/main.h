@@ -65,14 +65,15 @@ void Error_Handler(void);
 #define USART_RX_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
+#define TMC5240_CS_Pin GPIO_PIN_10
+#define TMC5240_CS_GPIO_Port GPIOB
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-#define TMC5240_CS_Pin GPIO_PIN_4
-#define TMC5240_CS_GPIO_Port GPIOA
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
