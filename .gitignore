@@ -10,6 +10,7 @@ Makefile
 *.cmake
 !CMakeLists.txt
 !cmake/
+!cmake/*.cmake
 compile_commands.json
 
 # Compiled Object files
