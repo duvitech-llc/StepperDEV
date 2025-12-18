@@ -1,51 +1,79 @@
 #ifndef TMC5240_H_
 #define TMC5240_H_
 
+// Uncomment if you want to save space.....
+// and put the table into your own .c file
+//#define TMC_API_EXTERNAL_CRC_TABLE 1
+
 #include <stdint.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include "tmc5240_hw_abstraction.h"
 
-/* -------------------------------------------------------------------------
- *  Register map (excerpt – full map is in the datasheet)
- *  The TMC5240 uses 8‑bit register addresses.  For a write access the
- *  address must be OR‑ed with 0x80 (add 0x80) [1].
- * ------------------------------------------------------------------------- */
+// Amount of CRC tables available
+// Each table takes ~260 bytes (257 bytes, one bool and structure padding)
+#define CRC_TABLE_COUNT 2
+
 typedef enum {
-    TMC5240_REG_GCONF      = 0x00,   /* General configuration          */
-    TMC5240_REG_GSTAT      = 0x01,   /* Global status flags            */
-    TMC5240_REG_IFCNT      = 0x02,   /* Interface counter              */
-    TMC5240_REG_NODECONF   = 0x03,   /* Node configuration (UART)      */
-    TMC5240_REG_IOIN       = 0x04,   /* Input/Output pins status       */
-    /* … add other registers as required … */
-} tmc5240_reg_t;
+    IC_BUS_SPI,
+    IC_BUS_UART,
+} TMC5240BusType;
 
-/* -------------------------------------------------------------------------
- *  Platform abstraction – the user must provide these functions in a
- *  separate file (e.g. platform_stm32.c) that implements the low‑level
- *  SPI/UART peripheral handling for the STM32F4.
- * ------------------------------------------------------------------------- */
-extern int8_t tmc5240_platform_spi_write(uint8_t address, const uint8_t *data,
-                                         size_t length);
-extern int8_t tmc5240_platform_spi_read (uint8_t address, uint8_t *data,
-                                         size_t length);
+// => TMC-API wrapper
+extern void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength);
+extern bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength);
+extern TMC5240BusType tmc5240_getBusType(uint16_t icID);
+extern uint8_t tmc5240_getNodeAddress(uint16_t icID);
+// => TMC-API wrapper
 
-/* -------------------------------------------------------------------------
- *  High‑level driver API
- * ------------------------------------------------------------------------- */
-int8_t  tmc5240_init(void);                                   /* reset & verify */
-int8_t  tmc5240_write_reg(tmc5240_reg_t reg, const uint8_t *buf,
-                          size_t len);
-int8_t  tmc5240_read_reg (tmc5240_reg_t reg, uint8_t *buf,
-                          size_t len);
 
-/* Convenience wrappers for the most common registers (32‑bit values) */
-int8_t  tmc5240_set_gconf(uint32_t value);
-int8_t  tmc5240_get_gconf(uint32_t *value);
-int8_t  tmc5240_get_gstat(uint32_t *value);
+int32_t tmc5240_readRegister(uint16_t icID, uint8_t address);
+void tmc5240_writeRegister(uint16_t icID, uint8_t address, int32_t value);
+void tmc5240_rotateMotor(uint16_t icID, uint8_t motor, int32_t velocity);
 
-/* -------------------------------------------------------------------------
- *  Miscellaneous
- * ------------------------------------------------------------------------- */
-#define TMC5240_REG_ADDR_WRITE(reg)   ((uint8_t)((reg) | 0x80))   /* [1] */
-#define TMC5240_REG_ADDR_READ(reg)    ((uint8_t)(reg))
+typedef struct
+{
+    uint32_t mask;
+    uint8_t shift;
+    uint8_t address;
+    bool isSigned;
+} RegisterField;
+
+
+static inline uint32_t field_extract(uint32_t data, RegisterField field)
+{
+    uint32_t value = (data & field.mask) >> field.shift;
+
+    if (field.isSigned)
+    {
+        // Apply signedness conversion
+        uint32_t baseMask = field.mask >> field.shift;
+        uint32_t signMask = baseMask & (~baseMask >> 1);
+        value = (value ^ signMask) - signMask;
+    }
+
+    return value;
+}
+
+static inline uint32_t field_read(uint16_t icID, RegisterField field)
+{
+    uint32_t value = tmc5240_readRegister(icID, field.address);
+
+    return field_extract(value, field);
+}
+
+static inline uint32_t field_update(uint32_t data, RegisterField field, uint32_t value)
+{
+    return (data & (~field.mask)) | ((value << field.shift) & field.mask);
+}
+
+static inline void field_write(uint16_t icID, RegisterField field, uint32_t value)
+{
+    uint32_t regValue = tmc5240_readRegister(icID, field.address);
+
+    regValue = field_update(regValue, field, value);
+
+    tmc5240_writeRegister(icID, field.address, regValue);
+}
 
 #endif /* TMC5240_H_ */

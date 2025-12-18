@@ -67,6 +67,8 @@ void Error_Handler(void);
 #define LD2_GPIO_Port GPIOA
 #define TMC5240_CS_Pin GPIO_PIN_10
 #define TMC5240_CS_GPIO_Port GPIOB
+#define DRV_EN_Pin GPIO_PIN_10
+#define DRV_EN_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
