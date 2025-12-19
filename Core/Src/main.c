@@ -21,8 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "tmc5240.h"
 #include "logging.h"
+#include "config.h"
+#include "RegisterAccess.h"
+#include "TMC5240.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
@@ -57,6 +59,22 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 
+// Typedefs
+typedef struct
+{
+    ConfigurationTypeDef *config;
+    int32_t velocity, oldX;
+    uint32_t oldTick;
+    uint8_t slaveAddress;
+} TMC5240TypeDef;
+
+// Swtich between UART and SPI here
+static TMC5240BusType activeBus = IC_BUS_SPI;
+
+static TMC5240TypeDef TMC5240;
+static uint8_t nodeAddress = 0;
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,6 +86,30 @@ static void MX_CRC_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
+
+
+static void writeConfiguration()
+{
+    uint8_t *ptr = &TMC5240.config->configIndex;
+    const int32_t *settings;
+
+    settings = tmc5240_sampleRegisterPreset;
+    // Find the next resettable register
+    while((*ptr < TMC5240_REGISTER_COUNT) && !TMC_IS_RESETTABLE(tmc5240_registerAccess[*ptr]))
+    {
+        (*ptr)++;
+    }
+
+    if(*ptr < TMC5240_REGISTER_COUNT)
+    {
+        tmc5240_writeRegister(DEFAULT_ICID, *ptr, settings[*ptr]);
+        (*ptr)++;
+    }
+    else // Finished configuration
+    {
+        TMC5240.config->state = CONFIG_READY;
+    }
+}
 
 /* USER CODE END PFP */
 
@@ -439,6 +481,42 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 		logging_UART_TxCpltCallback(huart);
 	}
 }
+
+void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
+{
+    UNUSED(icID);
+    HAL_StatusTypeDef status;
+    /* Select the TMC5240 by pulling CS low */
+    HAL_GPIO_WritePin(TMC5240_CS_GPIO_Port, TMC5240_CS_Pin, GPIO_PIN_RESET);
+
+    /* Perform SPI transmission and reception */
+    status = HAL_SPI_TransmitReceive(&hspi1, data, data, dataLength, 100);
+
+    /* Deselect the TMC5240 by pulling CS high */
+    HAL_GPIO_WritePin(TMC5240_CS_GPIO_Port, TMC5240_CS_Pin, GPIO_PIN_SET);
+}
+
+bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
+{
+    UNUSED(icID);
+    UNUSED(data);
+    UNUSED(writeLength);
+    UNUSED(readLength);
+    return false;
+}
+
+TMC5240BusType tmc5240_getBusType(uint16_t icID)
+{
+    UNUSED(icID);
+    return activeBus;
+}
+
+uint8_t tmc5240_getNodeAddress(uint16_t icID)
+{
+    UNUSED(icID);
+    return nodeAddress;
+}
+
 /* USER CODE END 4 */
 
 /**
