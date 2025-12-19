@@ -89,3 +89,23 @@ int8_t tmc5240_platform_spi_read(uint8_t address, uint8_t *data, size_t length)
     
     return (status == HAL_OK) ? 0 : -1;
 }
+
+void tmc5240_platform_spi_readwrite(uint16_t icID, uint8_t *data, size_t length)
+{
+    HAL_StatusTypeDef status;
+    uint8_t dummy_data[5] = {0};
+  
+    /* Pull CS low to start transaction */
+    HAL_GPIO_WritePin(TMC5240_CS_GPIO_Port, TMC5240_CS_Pin, GPIO_PIN_RESET);
+    
+    /* Transmit dummy bytes to receive data (full duplex SPI) */
+    status = HAL_SPI_TransmitReceive(&hspi1, dummy_data, data, length, TMC5240_SPI_TIMEOUT);
+    if(status != HAL_OK)
+    {
+        Error_Handler();
+    } 
+
+    /* Pull CS high to end transaction */
+    HAL_GPIO_WritePin(TMC5240_CS_GPIO_Port, TMC5240_CS_Pin, GPIO_PIN_SET);
+    
+}

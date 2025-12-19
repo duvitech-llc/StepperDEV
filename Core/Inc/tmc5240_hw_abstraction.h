@@ -19,82 +19,108 @@
 #define TMC5240_MODE_HOLD      3
 
 // Registers in TMC5240
-
 #define TMC5240_GCONF             0x00
 #define TMC5240_GSTAT             0x01
 #define TMC5240_IFCNT             0x02
 #define TMC5240_SLAVECONF         0x03
 #define TMC5240_IOIN              0x04
-#define TMC5240_DRV_CONF          0x05
-#define TMC5240_GLOBAL_SCALER     0x06
-#define TMC5240_RAMPMODE          0x07
-#define TMC5240_MSLUT_ADDR        0x08
-#define TMC5240_MSLUT_DATA        0x09
-#define TMC5240_X_COMPARE         0x10
-#define TMC5240_X_COMPARE_REPEAT  0x11
-#define TMC5240_IHOLD_IRUN        0x12
-#define TMC5240_TPOWERDOWN        0x13
-#define TMC5240_TSTEP             0x14
-#define TMC5240_TPWMTHRS          0x15
-#define TMC5240_TCOOLTHRS         0x16
-#define TMC5240_THIGH             0x17
-#define TMC5240_XACTUAL           0x18
-#define TMC5240_VACTUAL           0x19
-#define TMC5240_AACTUAL           0x1A
-#define TMC5240_VSTART            0x1B
-#define TMC5240_A1                0x1C
-#define TMC5240_V1                0x1D
-#define TMC5240_A2                0x1E
-#define TMC5240_V2                0x1F
-#define TMC5240_AMAX              0x20
-#define TMC5240_VMAX              0x21
-#define TMC5240_DMAX              0x22
-#define TMC5240_D2                0x23
-#define TMC5240_D1                0x24
-#define TMC5240_VSTOP             0x25
-#define TMC5240_TVMAX             0x26
-#define TMC5240_TZEROWAIT         0x27
-#define TMC5240_XTARGET           0x28
-#define TMC5240_VDCMIN            0x29
-#define TMC5240_SW_MODE           0x2A
-#define TMC5240_RAMP_STAT         0x2B
-#define TMC5240_XLATCH            0x2C
-#define TMC5240_POSITION_PI_CTRL  0x2D
-#define TMC5240_X_ENC             0x2E
-#define TMC5240_ENCMODE           0x2F
-#define TMC5240_ENC_CONST         0x30
-#define TMC5240_ENC_STATUS        0x31
-#define TMC5240_ENC_LATCH         0x32
-#define TMC5240_ENC_DEVIATION     0x33
-#define TMC5240_VIRTUAL_STOP_L    0x34
-#define TMC5240_VIRTUAL_STOP_R    0x35
-#define TMC5240_MSCNT             0x36
-#define TMC5240_MSCURACT          0x37
-#define TMC5240_CHOPCONF          0x38
-#define TMC5240_COOLCONF          0x39
-#define TMC5240_DCCTRL            0x3A
-#define TMC5240_DRV_STATUS        0x3B
-#define TMC5240_PWMCONF           0x3C
-#define TMC5240_PWM_SCALE         0x3D
-#define TMC5240_PWM_AUTO          0x3E
-#define TMC5240_SG4_THRS          0x3F
-#define TMC5240_SG4_RESULT        0x40
-#define TMC5240_SG4_IND           0x41
+#define TMC5240_X_COMPARE         0x05
+#define TMC5240_X_COMPARE_REPEAT  0x06
+#define TMC5240_DRV_CONF          0x0A
+#define TMC5240_GLOBAL_SCALER     0x0B
+#define TMC5240_IHOLD_IRUN        0x10
+#define TMC5240_TPOWERDOWN        0x11
+#define TMC5240_TSTEP             0x12
+#define TMC5240_TPWMTHRS          0x13
+#define TMC5240_TCOOLTHRS         0x14
+#define TMC5240_THIGH             0x15
+#define TMC5240_RAMPMODE          0x20
+#define TMC5240_XACTUAL           0x21
+#define TMC5240_VACTUAL           0x22
+#define TMC5240_VSTART            0x23
+#define TMC5240_A1                0x24
+#define TMC5240_V1                0x25
+#define TMC5240_AMAX              0x26
+#define TMC5240_VMAX              0x27
+#define TMC5240_DMAX              0x28
+#define TMC5240_TVMAX             0x29
+#define TMC5240_D1                0x2A
+#define TMC5240_VSTOP             0x2B
+#define TMC5240_TZEROWAIT         0x2C
+#define TMC5240_XTARGET           0x2D
+#define TMC5240_V2                0x2E
+#define TMC5240_A2                0x2F
+#define TMC5240_D2                0x30
+#define TMC5240_VDCMIN            0x33
+#define TMC5240_SW_MODE           0x34
+#define TMC5240_RAMP_STAT         0x35
+#define TMC5240_XLATCH            0x36
+#define TMC5240_ENCMODE           0x38
+#define TMC5240_X_ENC             0x39
+#define TMC5240_ENC_CONST         0x3A
+#define TMC5240_ENC_STATUS        0x3B
+#define TMC5240_ENC_LATCH         0x3C
+#define TMC5240_ENC_DEVIATION     0x3D
+#define TMC5240_VIRTUAL_STOP_L    0x3E
+#define TMC5240_VIRTUAL_STOP_R    0x3F
+#define TMC5240_ADC_VSUPPLY_AIN   0x50
+#define TMC5240_ADC_TEMP          0x51
+#define TMC5240_OTW_OV_VTH        0x52
+#define TMC5240_MSLUT_0           0x60
+#define TMC5240_MSLUT_1           0x61
+#define TMC5240_MSLUT_2           0x62
+#define TMC5240_MSLUT_3           0x63
+#define TMC5240_MSLUT_4           0x64
+#define TMC5240_MSLUT_5           0x65
+#define TMC5240_MSLUT_6           0x66
+#define TMC5240_MSLUT_7           0x67
+#define TMC5240_MSLUT_SEL         0x68
+#define TMC5240_MSLUT_START       0x69
+#define TMC5240_MSCNT             0x6A
+#define TMC5240_MSCURACT          0x6B
+#define TMC5240_CHOPCONF          0x6C
+#define TMC5240_COOLCONF          0x6D
+#define TMC5240_DCCTRL            0x6E
+#define TMC5240_DRV_STATUS        0x6F
+#define TMC5240_PWMCONF           0x70
+#define TMC5240_PWM_SCALE         0x71
+#define TMC5240_PWM_AUTO          0x72
+#define TMC5240_SG4_THRS          0x74
+#define TMC5240_SG4_RESULT        0x75
+#define TMC5240_SG4_IND           0x76
 
 // Register fields in TMC5240
-
-#define TMC5240_EN_PWM_MODE_MASK                 0x00000001
-#define TMC5240_EN_PWM_MODE_SHIFT                0
+#define TMC5240_FAST_STANDSTILL_MASK             0x00000002
+#define TMC5240_FAST_STANDSTILL_SHIFT            1
+#define TMC5240_FAST_STANDSTILL_FIELD            ((RegisterField) { TMC5240_FAST_STANDSTILL_MASK, TMC5240_FAST_STANDSTILL_SHIFT, TMC5240_GCONF, false })
+#define TMC5240_EN_PWM_MODE_MASK                 0x00000004
+#define TMC5240_EN_PWM_MODE_SHIFT                2
 #define TMC5240_EN_PWM_MODE_FIELD                ((RegisterField) { TMC5240_EN_PWM_MODE_MASK, TMC5240_EN_PWM_MODE_SHIFT, TMC5240_GCONF, false })
-#define TMC5240_MULTISTEP_FILT_MASK              0x00000002
-#define TMC5240_MULTISTEP_FILT_SHIFT             1
-#define TMC5240_MULTISTEP_FILT_FIELD             ((RegisterField) { TMC5240_MULTISTEP_FILT_MASK, TMC5240_MULTISTEP_FILT_SHIFT, TMC5240_GCONF, false })
-#define TMC5240_SHAFT_MASK                       0x00000004
-#define TMC5240_SHAFT_SHIFT                      2
+#define TMC5240_SHAFT_MASK                       0x00000010
+#define TMC5240_SHAFT_SHIFT                      4
 #define TMC5240_SHAFT_FIELD                      ((RegisterField) { TMC5240_SHAFT_MASK, TMC5240_SHAFT_SHIFT, TMC5240_GCONF, false })
-#define TMC5240_DIAG0_ERROR_MASK                 0x00000008
-#define TMC5240_DIAG0_ERROR_SHIFT                3
-#define TMC5240_DIAG0_ERROR_FIELD                ((RegisterField) { TMC5240_DIAG0_ERROR_MASK, TMC5240_DIAG0_ERROR_SHIFT, TMC5240_GCONF, false })
+#define TMC5240_DIAG0_NINT_STEP_MASK             0x00000080
+#define TMC5240_DIAG0_NINT_STEP_SHIFT            7
+#define TMC5240_DIAG0_NINT_STEP_FIELD            ((RegisterField) { TMC5240_DIAG0_NINT_STEP_MASK, TMC5240_DIAG0_NINT_STEP_SHIFT, TMC5240_GCONF, false })
+
+#define TMC5240_DIAG0_INT_PUSHPULL_MASK          0x00001000
+#define TMC5240_DIAG0_INT_PUSHPULL_SHIFT         12
+#define TMC5240_DIAG0_INT_PUSHPULL_FIELD         ((RegisterField) { TMC5240_DIAG0_INT_PUSHPULL_MASK, TMC5240_DIAG0_INT_PUSHPULL_SHIFT, TMC5240_GCONF, false })
+#define TMC5240_DIAG1_POSCOMP_PUSHPULL_MASK      0x00002000
+#define TMC5240_DIAG1_POSCOMP_PUSHPULL_SHIFT     13
+#define TMC5240_DIAG1_POSCOMP_PUSHPULL_FIELD     ((RegisterField) { TMC5240_DIAG1_POSCOMP_PUSHPULL_MASK, TMC5240_DIAG1_POSCOMP_PUSHPULL_SHIFT, TMC5240_GCONF, false })
+#define TMC5240_SMALL_HYSTERESIS_MASK            0x00004000
+#define TMC5240_SMALL_HYSTERESIS_SHIFT           14
+#define TMC5240_SMALL_HYSTERESIS_FIELD           ((RegisterField) { TMC5240_SMALL_HYSTERESIS_MASK, TMC5240_SMALL_HYSTERESIS_SHIFT, TMC5240_GCONF, false })
+#define TMC5240_STOP_ENABLE_MASK                 0x00008000
+#define TMC5240_STOP_ENABLE_SHIFT                15
+#define TMC5240_STOP_ENABLE_FIELD                ((RegisterField) { TMC5240_STOP_ENABLE_MASK, TMC5240_STOP_ENABLE_SHIFT, TMC5240_GCONF, false })
+#define TMC5240_DIRECT_MODE_MASK                 0x00010000
+#define TMC5240_DIRECT_MODE_SHIFT                16
+#define TMC5240_DIRECT_MODE_FIELD                ((RegisterField) { TMC5240_DIRECT_MODE_MASK, TMC5240_DIRECT_MODE_SHIFT, TMC5240_GCONF, false })
+
+
+
 #define TMC5240_DIAG0_OTPW_MASK                  0x00000010
 #define TMC5240_DIAG0_OTPW_SHIFT                 4
 #define TMC5240_DIAG0_OTPW_FIELD                 ((RegisterField) { TMC5240_DIAG0_OTPW_MASK, TMC5240_DIAG0_OTPW_SHIFT, TMC5240_GCONF, false })
@@ -107,21 +133,6 @@
 #define TMC5240_DIAG1_INDEX_MASK                 0x00000080
 #define TMC5240_DIAG1_INDEX_SHIFT                7
 #define TMC5240_DIAG1_INDEX_FIELD                ((RegisterField) { TMC5240_DIAG1_INDEX_MASK, TMC5240_DIAG1_INDEX_SHIFT, TMC5240_GCONF, false })
-#define TMC5240_DIAG0_INT_PUSHPULL_MASK          0x00000100
-#define TMC5240_DIAG0_INT_PUSHPULL_SHIFT         8
-#define TMC5240_DIAG0_INT_PUSHPULL_FIELD         ((RegisterField) { TMC5240_DIAG0_INT_PUSHPULL_MASK, TMC5240_DIAG0_INT_PUSHPULL_SHIFT, TMC5240_GCONF, false })
-#define TMC5240_DIAG1_POSCOMP_PUSHPULL_MASK      0x00000200
-#define TMC5240_DIAG1_POSCOMP_PUSHPULL_SHIFT     9
-#define TMC5240_DIAG1_POSCOMP_PUSHPULL_FIELD     ((RegisterField) { TMC5240_DIAG1_POSCOMP_PUSHPULL_MASK, TMC5240_DIAG1_POSCOMP_PUSHPULL_SHIFT, TMC5240_GCONF, false })
-#define TMC5240_SMALL_HYSTERESIS_MASK            0x00000400
-#define TMC5240_SMALL_HYSTERESIS_SHIFT           10
-#define TMC5240_SMALL_HYSTERESIS_FIELD           ((RegisterField) { TMC5240_SMALL_HYSTERESIS_MASK, TMC5240_SMALL_HYSTERESIS_SHIFT, TMC5240_GCONF, false })
-#define TMC5240_STOP_ENABLE_MASK                 0x00000800
-#define TMC5240_STOP_ENABLE_SHIFT                11
-#define TMC5240_STOP_ENABLE_FIELD                ((RegisterField) { TMC5240_STOP_ENABLE_MASK, TMC5240_STOP_ENABLE_SHIFT, TMC5240_GCONF, false })
-#define TMC5240_DIRECT_MODE_MASK                 0x00001000
-#define TMC5240_DIRECT_MODE_SHIFT                12
-#define TMC5240_DIRECT_MODE_FIELD                ((RegisterField) { TMC5240_DIRECT_MODE_MASK, TMC5240_DIRECT_MODE_SHIFT, TMC5240_GCONF, false })
 #define TMC5240_SD_MASK                          0x00002000
 #define TMC5240_SD_SHIFT                         13
 #define TMC5240_SD_FIELD                         ((RegisterField) { TMC5240_SD_MASK, TMC5240_SD_SHIFT, TMC5240_GCONF, false })

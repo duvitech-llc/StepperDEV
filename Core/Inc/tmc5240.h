@@ -16,12 +16,11 @@
 
 typedef enum {
     IC_BUS_SPI,
-    IC_BUS_UART,
 } TMC5240BusType;
 
 // => TMC-API wrapper
-extern void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength);
-extern bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength);
+extern void tmc5240_platform_spi_readwrite(uint16_t icID, uint8_t *data, size_t dataLength);
+
 extern TMC5240BusType tmc5240_getBusType(uint16_t icID);
 extern uint8_t tmc5240_getNodeAddress(uint16_t icID);
 // => TMC-API wrapper
