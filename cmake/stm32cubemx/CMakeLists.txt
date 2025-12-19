@@ -25,12 +25,12 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/stm32l4xx_hal_timebase_tim.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/sysmem.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/syscalls.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../startup_stm32l476xx.s
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/tmc5240.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/util.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/jsmn.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/lwrb.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/logging.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../startup_stm32l476xx.s
 )
 
 # STM32 HAL/LL Drivers
