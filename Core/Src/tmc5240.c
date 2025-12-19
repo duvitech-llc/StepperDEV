@@ -49,7 +49,7 @@ int32_t tmc5240_readRegister(uint16_t icID, uint8_t address)
     }
     else if (bus == IC_BUS_UART)
     {
-        return readRegisterUART(icID, address);
+        printf("UART read not implemented\r\n");
     }
     return -1;
 }
@@ -64,7 +64,7 @@ void tmc5240_writeRegister(uint16_t icID, uint8_t address, int32_t value)
     }
     else if (bus == IC_BUS_UART)
     {
-        writeRegisterUART(icID,  address,  value);
+        printf("UART write not implemented\r\n");
     }
 }
 

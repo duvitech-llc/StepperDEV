@@ -1295,6 +1295,8 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  
+  int32_t buffer = 0;
 
   /* USER CODE END 1 */
 
@@ -1325,12 +1327,77 @@ int main(void)
   DWT_Init();
   init_dma_logging();
   printf("\033c");
-  printf("Stepper Demo\r\n\r\n");
+  printf("Duvitech Stepper Demo\r\n\r\n");
   printf("CPU Clock Frequency: %lu MHz\r\n", HAL_RCC_GetSysClockFreq() / 1000000);
 
   printf("Initializing TMC5240...\r\n");
   TMC5240_init();
   printf("TMC5240 initialized.\r\n\r\n");
+
+  HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_SET); // Disable Driver
+
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_INP_OUT, &buffer);
+  printf("TMC5240_INP_OUT: 0x%08lX \r\n", buffer);
+
+  // Motor Configurations
+  writeRegister(DEFAULT_ICID, TMC5240_GCONF, 0x00000008); 
+  writeRegister(DEFAULT_ICID, TMC5240_DRV_CONF, 0x00000020); 
+  writeRegister(DEFAULT_ICID, TMC5240_GLOBAL_SCALER, 0x00000000); 
+
+  // Motor Current configurations
+  writeRegister(DEFAULT_ICID, TMC5240_IHOLD_IRUN, 0x00070A03);
+  writeRegister(DEFAULT_ICID, TMC5240_TPOWERDOWN, 0x0000000A);
+  writeRegister(DEFAULT_ICID, TMC5240_CHOPCONF, 0x10410153);
+  writeRegister(DEFAULT_ICID, TMC5240_RAMPMODE, 0x1);
+  writeRegister(DEFAULT_ICID, TMC5240_XACTUAL, 0x00CD79FA);
+  writeRegister(DEFAULT_ICID, TMC5240_AMAX, 0x00000F8D);
+  writeRegister(DEFAULT_ICID, TMC5240_DMAX, 0x00000F8D);
+  writeRegister(DEFAULT_ICID, TMC5240_VMAX, 0x00002710);
+  writeRegister(DEFAULT_ICID, TMC5240_TVMAX, 0x00000F8D);
+
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_GCONF, &buffer);
+  printf("TMC5240_GCONF: 0x%08lX \r\n", buffer);
+  
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_GSTAT, &buffer);
+  printf("TMC5240_GSTAT: 0x%08lX \r\n", buffer);
+
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_DRV_CONF, &buffer);
+  printf("TMC5240_DRV_CONF: 0x%08lX \r\n", buffer);
+
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_GLOBAL_SCALER, &buffer);
+  printf("TMC5240_GLOBAL_SCALER: 0x%08lX \r\n", buffer);
+  
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_CHOPCONF, &buffer);
+  printf("TMC5240_CHOPCONF: 0x%08lX \r\n", buffer);
+
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_IHOLD_IRUN, &buffer);
+  printf("TMC5240_IHOLD_IRUN: 0x%08lX \r\n", buffer);
+
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_AMAX, &buffer);
+  printf("TMC5240_AMAX: 0x%08lX \r\n", buffer);
+
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_VMAX, &buffer);
+  printf("TMC5240_VMAX: 0x%08lX \r\n", buffer);
+
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_RAMPMODE, &buffer);
+  printf("TMC5240_RAMPMODE: 0x%08lX \r\n", buffer);
+
+  // Enable Motor
+  HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_RESET); // Enable Driver
+
+  buffer = 0;
+  readRegister(DEFAULT_ICID, TMC5240_INP_OUT, &buffer);
+  printf("TMC5240_INP_OUT: 0x%08lX \r\n", buffer);
 
 
   printf("Entering Main LOOP.\r\n\r\n");
@@ -1519,7 +1586,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -1660,14 +1727,43 @@ void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
     UNUSED(icID);
     HAL_StatusTypeDef status;
+    uint8_t ret_data[5] = { 0 };
+    
+    /* Add small delay to ensure previous transaction completed */
+    HAL_Delay(1);
+    // printf("TMC5240 SPI TX: ");
+    // printBuffer(data, dataLength);
+    
     /* Select the TMC5240 by pulling CS low */
     HAL_GPIO_WritePin(TMC5240_CS_GPIO_Port, TMC5240_CS_Pin, GPIO_PIN_RESET);
-
+    
+    /* Small delay after CS assert (minimum CSN low time) */
+    for(volatile int i = 0; i < 20; i++);
+    
     /* Perform SPI transmission and reception */
-    status = HAL_SPI_TransmitReceive(&hspi1, data, data, dataLength, 100);
-
+    /* HAL_SPI_TransmitReceive parameters: hspi, pTxData, pRxData, Size, Timeout */
+    status = HAL_SPI_TransmitReceive(&hspi1, data, ret_data, dataLength, 100);
+    if(status != HAL_OK) {
+        printf("SPI Error during TransmitReceive: %d\r\n", status);
+    }
+    
+    /* Small delay before CS deassert */
+    for(volatile int i = 0; i < 20; i++);
+    
     /* Deselect the TMC5240 by pulling CS high */
     HAL_GPIO_WritePin(TMC5240_CS_GPIO_Port, TMC5240_CS_Pin, GPIO_PIN_SET);
+    
+    /* Copy received data back to the original buffer */
+    for(size_t i = 0; i < dataLength; i++) {
+        data[i] = ret_data[i];
+    }
+    
+    // printf("TMC5240 SPI RX: ");
+    // printBuffer(data, dataLength);
+
+    if(status != HAL_OK) {
+        printf("SPI Error: %d\r\n", status);
+    }
 }
 
 bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
@@ -1721,7 +1817,9 @@ void TMC5240_init(void)
 
     // HAL.IOs->config->setHigh(Pins.nSLEEP);
     // HAL.IOs->config->setHigh(Pins.DRV_ENN_CFG6);
-    HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_SET);
+    // DRV_EN is active low, so RESET = enabled
+    HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_RESET);
+    HAL_Delay(10);  // Wait for driver to power up
     // HAL.IOs->config->setLow(Pins.UART_MODE);
     // HAL.IOs->config->setLow(Pins.IREF_R2);
     // HAL.IOs->config->setLow(Pins.IREF_R2);
@@ -1760,7 +1858,8 @@ void TMC5240_init(void)
 
     vmax_position = 0;
 
-    enableDriver(DRIVER_USE_GLOBAL_ENABLE);
+    // Driver already enabled above
+    // enableDriver(DRIVER_ENABLE);
 
 
 };
