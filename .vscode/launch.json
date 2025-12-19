@@ -35,7 +35,7 @@
                     "ignoreFailures": false
                 }
             ],
-            "preLaunchTask": "CMake: Build (Debug)",
+            "preLaunchTask": "Flash Firmware",
             "postDebugTask": "",
             "linux": {
                 "miDebuggerPath": "/usr/bin/gdb-multiarch",

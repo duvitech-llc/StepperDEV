@@ -1332,13 +1332,8 @@ int main(void)
   TMC5240_init();
   printf("TMC5240 initialized.\r\n\r\n");
 
-  printf("Enabling motor driver...\r\n");
-  
-  printf("Motor driver enabled.\r\n\r\n");
-  printf("Starting motor...\r\n");
-  
-  printf("Motor started.\r\n\r\n");
 
+  printf("Entering Main LOOP.\r\n\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
