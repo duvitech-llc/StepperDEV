@@ -93,6 +93,7 @@ static TMC5240TypeDef TMC5240;
 static uint8_t nodeAddress = 0;
 static bool vMaxModified = false;
 static uint32_t vmax_position;
+static bool motorEnabled = false;
 //static uint32_t vMax         = 1;
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
@@ -129,7 +130,6 @@ static void deInit(void);
 static uint32_t userFunction(uint8_t type, uint8_t motor, int32_t *value);
 static uint8_t reset();
 static uint8_t restore();
-static void enableDriver(DriverState state);
 
 
 static void writeConfiguration()
@@ -1267,13 +1267,6 @@ static uint8_t restore()
     return true;
 }
 
-static void enableDriver(DriverState state)
-{
-    if(state == DRIVER_DISABLE)
-      HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_SET);
-    else if(state == DRIVER_ENABLE)
-        HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_RESET);
-}
 
 static void init_comm(TMC5240BusType mode)
 {
@@ -1394,6 +1387,7 @@ int main(void)
 
   // Enable Motor
   HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_RESET); // Enable Driver
+  motorEnabled = true;
 
   buffer = 0;
   readRegister(DEFAULT_ICID, TMC5240_INP_OUT, &buffer);
@@ -1704,6 +1698,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(TMC5240_CS_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
   /* USER CODE END MX_GPIO_Init_2 */
@@ -1721,6 +1719,27 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	{
 		logging_UART_TxCpltCallback(huart);
 	}
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if(GPIO_Pin == B1_Pin)
+  {
+    /* Toggle motor enable state */
+    motorEnabled = !motorEnabled;
+    
+    if(motorEnabled)
+    {
+      
+      HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_RESET); // Enable Driver
+      printf("\r\nMotor ENABLED\r\n");
+    }
+    else
+    {
+      HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_SET); // Disable Driver
+      printf("\r\nMotor DISABLED\r\n");
+    }
+  }
 }
 
 void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
@@ -1857,10 +1876,6 @@ void TMC5240_init(void)
     TMC5240.config->state        = CONFIG_READY;
 
     vmax_position = 0;
-
-    // Driver already enabled above
-    // enableDriver(DRIVER_ENABLE);
-
 
 };
 
