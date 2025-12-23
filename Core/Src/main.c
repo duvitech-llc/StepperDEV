@@ -97,7 +97,7 @@ static bool motorEnabled = false;
 //static uint32_t vMax         = 1;
 static bool noRegResetnSLEEP = false;
 static uint32_t nSLEEPTick;
-
+static bool b2Kstep = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -1333,7 +1333,9 @@ int main(void)
   readRegister(DEFAULT_ICID, TMC5240_INP_OUT, &buffer);
   printf("TMC5240_INP_OUT: 0x%08lX \r\n", buffer);
 
-  #if 0
+#if 0
+  
+  b2Kstep = false;
   // Motor Configurations
   writeRegister(DEFAULT_ICID, TMC5240_GCONF, 0x00000008); 
   writeRegister(DEFAULT_ICID, TMC5240_DRV_CONF, 0x00000020); 
@@ -1350,6 +1352,8 @@ int main(void)
   writeRegister(DEFAULT_ICID, TMC5240_VMAX, 0x00002710);
   writeRegister(DEFAULT_ICID, TMC5240_TVMAX, 0x00000F8D);
 #else
+  
+  b2Kstep = true;
 
   // Enable driver, internal motion controller
   writeRegister(DEFAULT_ICID, TMC5240_GCONF, 0x00000008);  
@@ -1757,19 +1761,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if(GPIO_Pin == B1_Pin)
   {
-    /* Toggle motor enable state */
-    motorEnabled = !motorEnabled;
-    
-    if(motorEnabled)
+    if(b2Kstep)
     {
-      
-      HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_RESET); // Enable Driver
-      printf("\r\nMotor ENABLED\r\n");
-    }
-    else
-    {
-      HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_SET); // Disable Driver
-      printf("\r\nMotor DISABLED\r\n");
+        int32_t currentPos = tmc5240_readRegister(DEFAULT_ICID, TMC5240_XACTUAL);
+        int32_t targetPos = currentPos + 2000; // Move 2000 steps forward
+        tmc5240_writeRegister(DEFAULT_ICID, TMC5240_XTARGET, targetPos);
+        printf("Moving to position: %ld\r\n", targetPos);
     }
   }
 }
@@ -1781,7 +1778,7 @@ void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
     uint8_t ret_data[5] = { 0 };
     
     /* Add small delay to ensure previous transaction completed */
-    HAL_Delay(1);
+    delay_us(500);
     // printf("TMC5240 SPI TX: ");
     // printBuffer(data, dataLength);
     
