@@ -319,10 +319,208 @@ In VS Code, check `settings.json`:
 }
 ```
 
-## License
+```markdown
+# TMC5240 – Bare Minimum Configuration for Moving a Fixed Number of Steps
 
-Copyright (c) 2025 STMicroelectronics.
-All rights reserved.
+This document describes the **minimum required register configuration** for the **TMC5240** stepper motor driver to rotate a motor by a specific number of steps using the **internal motion controller** (position mode).
 
-This software is licensed under terms that can be found in the LICENSE file
-in the root directory of this software component.
+The goal is:
+- ✔ Move the motor to a target position
+- ✔ Set sane motor current limits
+- ✔ Avoid unnecessary features (StealthChop2, tuning, power optimizations)
+- ✔ Keep bring-up simple and reliable
+
+---
+
+## Design Philosophy
+
+- **No StealthChop2**  
+  Use default **SpreadCycle** for robustness.
+- **No fine chopper tuning**  
+  Only a valid configuration is required.
+- **No power optimizations**  
+  These can be added later.
+- **Position-based move**  
+  Command motion using `XTARGET`.
+
+---
+
+## Minimum Required Registers
+
+Only the following registers are required to move the motor:
+
+```
+
+GCONF
+DRV_CONF
+IHOLD_IRUN
+CHOPCONF
+RAMPMODE
+XACTUAL
+AMAX
+DMAX
+VMAX
+XTARGET
+
+````
+
+Everything else is optional.
+
+---
+
+## 1. Core Driver Configuration
+
+### Enable Driver and Motion Controller
+
+```c
+writeRegister(IC, TMC5240_GCONF, 0x00000008);
+````
+
+* Enables the internal motion controller
+* Leaves all optional features disabled
+
+---
+
+### Current Range Selection (Hardware Scaling)
+
+```c
+writeRegister(IC, TMC5240_DRV_CONF, 0x00000020);
+```
+
+* Selects the current range based on your **RREF resistor**
+* This sets the **absolute maximum motor current**
+* All run/hold currents are scaled from this
+
+---
+
+## 2. Motor Current Configuration
+
+```c
+// IHOLD = 3, IRUN = 10, IHOLDDELAY = 7
+writeRegister(IC, TMC5240_IHOLD_IRUN, 0x00070A03);
+```
+
+* **IRUN**: current while the motor is moving
+* **IHOLD**: current when the motor is stopped
+* **IHOLDDELAY**: delay before switching to hold current
+
+These values are expressed as a **percentage of full-scale current**.
+
+---
+
+## 3. Minimal Chopper Configuration (SpreadCycle)
+
+```c
+writeRegister(IC, TMC5240_CHOPCONF, 0x00010053);
+```
+
+Why this value:
+
+* Valid **SpreadCycle** configuration
+* No StealthChop2 dependency
+* Works reliably for bring-up
+* No tuning required
+
+---
+
+## 4. Motion Mode and Kinematics
+
+### Select Positioning Mode
+
+```c
+writeRegister(IC, TMC5240_RAMPMODE, 0x00000000);
+```
+
+* Enables **position mode**
+* Motor moves to `XTARGET`
+
+---
+
+### Reset Logical Position
+
+```c
+writeRegister(IC, TMC5240_XACTUAL, 0x00000000);
+```
+
+* Defines the current position as zero
+* Recommended at startup
+
+---
+
+### Acceleration and Speed Limits
+
+```c
+writeRegister(IC, TMC5240_AMAX, 0x00000F8D);
+writeRegister(IC, TMC5240_DMAX, 0x00000F8D);
+writeRegister(IC, TMC5240_VMAX, 0x00002710);
+```
+
+* `AMAX` – acceleration
+* `DMAX` – deceleration
+* `VMAX` – maximum velocity
+
+Exact values are application-dependent but these are safe defaults.
+
+---
+
+## 5. Commanding a Move
+
+To rotate the motor by a fixed number of microsteps:
+
+```c
+writeRegister(IC, TMC5240_XTARGET, 2000);
+```
+
+The motor will:
+
+1. Accelerate
+2. Reach cruise velocity
+3. Decelerate
+4. Stop exactly at the target position
+
+Negative values move in the opposite direction.
+
+---
+
+## What Is Intentionally Omitted
+
+The following registers are **not required** for basic motion:
+
+| Register               | Reason                             |
+| ---------------------- | ---------------------------------- |
+| `GLOBAL_SCALER`        | Defaults are sufficient            |
+| `TPOWERDOWN`           | Only affects idle power saving     |
+| `TVMAX`                | Not used in basic position mode    |
+| Tuned `CHOPCONF`       | Only needed for noise optimization |
+| StealthChop2 registers | Optional, not required             |
+
+---
+
+## Recommended Bring-Up Strategy
+
+1. ✅ Use this minimal configuration
+2. ✅ Verify direction, speed, and positioning
+3. ✅ Validate motor current and temperature
+4. ⏭ Add StealthChop2 **only if noise matters**
+5. ⏭ Add power optimizations later
+
+---
+
+## Summary
+
+This configuration is the **smallest reliable setup** that:
+
+* Moves a motor by a known number of steps
+* Uses safe current control
+* Avoids unnecessary complexity
+
+Perfect for:
+
+* Initial firmware bring-up
+* Motion verification
+* Deterministic positioning applications
+
+---
+
+```
+```
