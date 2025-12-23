@@ -319,7 +319,6 @@ In VS Code, check `settings.json`:
 }
 ```
 
-```markdown
 # TMC5240 – Bare Minimum Configuration for Moving a Fixed Number of Steps
 
 This document describes the **minimum required register configuration** for the **TMC5240** stepper motor driver to rotate a motor by a specific number of steps using the **internal motion controller** (position mode).
@@ -522,5 +521,4 @@ Perfect for:
 
 ---
 
-```
 ```
