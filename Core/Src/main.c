@@ -1333,6 +1333,7 @@ int main(void)
   readRegister(DEFAULT_ICID, TMC5240_INP_OUT, &buffer);
   printf("TMC5240_INP_OUT: 0x%08lX \r\n", buffer);
 
+  #if 0
   // Motor Configurations
   writeRegister(DEFAULT_ICID, TMC5240_GCONF, 0x00000008); 
   writeRegister(DEFAULT_ICID, TMC5240_DRV_CONF, 0x00000020); 
@@ -1348,6 +1349,37 @@ int main(void)
   writeRegister(DEFAULT_ICID, TMC5240_DMAX, 0x00000F8D);
   writeRegister(DEFAULT_ICID, TMC5240_VMAX, 0x00002710);
   writeRegister(DEFAULT_ICID, TMC5240_TVMAX, 0x00000F8D);
+#else
+
+  // Enable driver, internal motion controller
+  writeRegister(DEFAULT_ICID, TMC5240_GCONF, 0x00000008);  
+  
+  // Current range selection (leave as you had it)
+  writeRegister(DEFAULT_ICID, TMC5240_DRV_CONF, 0x00000020);
+  
+  // Run/Hold current
+  // IHOLD=3, IRUN=10, IHOLDDELAY=7
+  writeRegister(DEFAULT_ICID, TMC5240_IHOLD_IRUN, 0x00070A03);
+
+  // Minimal valid SpreadCycle config
+  writeRegister(DEFAULT_ICID, TMC5240_CHOPCONF, 0x00010053);
+
+  // Positioning mode
+  writeRegister(DEFAULT_ICID, TMC5240_RAMPMODE, 0x00000000);
+  
+  // Reset logical position
+  writeRegister(DEFAULT_ICID, TMC5240_XACTUAL, 0x00000000);
+  
+  // Acceleration / deceleration
+  writeRegister(DEFAULT_ICID, TMC5240_AMAX, 0x00000F8D);
+  writeRegister(DEFAULT_ICID, TMC5240_DMAX, 0x00000F8D);
+
+  // Max velocity
+  writeRegister(DEFAULT_ICID, TMC5240_VMAX, 0x00002710);
+
+  // move 2000 steps forward
+  writeRegister(DEFAULT_ICID, TMC5240_XTARGET, 2000);
+#endif
 
   buffer = 0;
   readRegister(DEFAULT_ICID, TMC5240_GCONF, &buffer);
