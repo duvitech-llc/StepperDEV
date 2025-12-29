@@ -12,7 +12,7 @@
 //constants
 
 #define TMC5240_REGISTER_COUNT   128
-#define TMC5240_MOTORS           1
+#define TMC5240_MOTORS           2
 #define TMC5240_WRITE_BIT            0x80
 #define TMC5240_ADDRESS_MASK         0x7F
 #define TMC5240_MAX_VELOCITY     8388096

@@ -50,7 +50,7 @@ extern uint8_t tmc5240_getNodeAddress(uint16_t icID);
 
 int32_t tmc5240_readRegister(uint16_t icID, uint8_t address);
 void tmc5240_writeRegister(uint16_t icID, uint8_t address, int32_t value);
-void tmc5240_rotateMotor(uint16_t icID, uint8_t motor, int32_t velocity);
+void tmc5240_rotateMotor(uint16_t icID, int32_t velocity);
 
 
 static inline uint32_t tmc5240_fieldExtract(uint32_t data, RegisterField field)

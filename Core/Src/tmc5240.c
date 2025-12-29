@@ -8,6 +8,8 @@
 
 #include "TMC5240.h"
 
+#include <stdio.h>
+
 #ifdef TMC_API_EXTERNAL_CRC_TABLE
 extern const uint8_t tmcCRCTable_Poly7Reflected[256];
 #else
@@ -150,9 +152,9 @@ void writeRegisterUART(uint16_t icID, uint8_t registerAddress, int32_t value)
     tmc5240_readWriteUART(icID, &data[0], 8, 0);
 }
 
-void tmc5240_rotateMotor(uint16_t icID, uint8_t motor, int32_t velocity)
+void tmc5240_rotateMotor(uint16_t icID, int32_t velocity)
 {
-    if(motor >= TMC5240_MOTORS)
+    if(icID >= TMC5240_MOTORS)
         return;
 
     tmc5240_writeRegister(icID, TMC5240_VMAX, (velocity < 0) ? -velocity : velocity);
