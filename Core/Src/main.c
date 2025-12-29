@@ -1330,7 +1330,11 @@ int main(void)
 
   buffer = 0;
   readRegister(0, TMC5240_INP_OUT, &buffer);
-  printf("TMC5240_INP_OUT: 0x%08lX \r\n", buffer);
+  printf("TMC5240_INP_OUT 0: 0x%08lX \r\n", buffer);
+
+  buffer = 0;
+  readRegister(1, TMC5240_INP_OUT, &buffer);
+  printf("TMC5240_INP_OUT 1: 0x%08lX \r\n", buffer);
 
 #if 0
   
@@ -1492,6 +1496,7 @@ int main(void)
   HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_RESET); // Enable Driver
   motorEnabled = true;
 
+  printf("\r\n\r\n");
   buffer = 0;
   readRegister(0, TMC5240_INP_OUT, &buffer);
   printf("TMC5240_INP_OUT 0: 0x%08lX \r\n", buffer);
@@ -1780,10 +1785,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, STEP2_CS_Pin|DRV_EN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(TMC5240_CS_GPIO_Port, TMC5240_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(TMC5240_CS_GPIO_Port, TMC5240_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, STEP2_CS_Pin|DRV_EN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
