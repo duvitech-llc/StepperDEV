@@ -61,8 +61,6 @@ EMBED_TEMPLATES = {
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "${GDB_PATH}",
-            "debugServerPath": "${OPENOCD_PATH}",
             "debugServerArgs": "-f interface/stlink.cfg -f target/stm32l4x.cfg",
             "serverStarted": "Info : Listening on port [0-9]+ for gdb connection",
             "filterStderr": true,
