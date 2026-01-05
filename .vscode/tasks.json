@@ -73,7 +73,7 @@
         {
             "label": "Flash Firmware",
             "type": "shell",
-            "command": "openocd",
+            "command": "/usr/bin/openocd",
             "args": [
                 "-f",
                 "interface/stlink.cfg",

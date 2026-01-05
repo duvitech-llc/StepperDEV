@@ -12,8 +12,8 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "gdb-multiarch",
-            "debugServerPath": "openocd",
+            "miDebuggerPath": "/usr/bin/gdb-multiarch",
+            "debugServerPath": "/usr/bin/openocd",
             "debugServerArgs": "-f interface/stlink.cfg -f target/stm32l4x.cfg",
             "serverStarted": "Info : Listening on port [0-9]+ for gdb connection",
             "filterStderr": true,
@@ -42,8 +42,8 @@
                 "debugServerPath": "/usr/bin/openocd"
             },
             "windows": {
-                "miDebuggerPath": "arm-none-eabi-gdb.exe",
-                "debugServerPath": "openocd.exe"
+                "miDebuggerPath": "/usr/bin/gdb-multiarch",
+                "debugServerPath": "/usr/bin/openocd"
             }
         },
         {
