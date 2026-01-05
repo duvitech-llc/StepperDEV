@@ -52,6 +52,12 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
+PHDRS
+{
+  flash PT_LOAD FLAGS(5); /* R + X */
+  ram   PT_LOAD FLAGS(6); /* R + W */
+}
+
 /* Specify the memory areas */
 MEMORY
 {
@@ -75,7 +81,7 @@ SECTIONS
     . = ALIGN(8);
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(8);
-  } >FLASH
+  } >FLASH :flash
 
   /* The program code and other data goes into FLASH */
   .text :
@@ -92,7 +98,7 @@ SECTIONS
 
     . = ALIGN(8);
     _etext = .;        /* define a global symbols at end of code */
-  } >FLASH
+  } >FLASH :flash
 
   /* Constant data goes into FLASH */
   .rodata :
@@ -101,7 +107,7 @@ SECTIONS
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(8);
-  } >FLASH
+  } >FLASH :flash
 
   .ARM.extab : /* The "READONLY" keyword is only supported in GCC11 and later, remove it if using GCC10 or earlier. */
   {
@@ -162,7 +168,7 @@ SECTIONS
     *(.RamFunc*)       /* .RamFunc* sections */
 
     . = ALIGN(8);
-  } >RAM AT> FLASH
+  } >RAM AT> FLASH :ram
 
  /* Initialized TLS data section */
   .tdata : ALIGN(4)
@@ -221,7 +227,7 @@ SECTIONS
     _ebss = .;         /* define a global symbol at bss end */
     __bss_end__ = _ebss;
       PROVIDE( __bss_end = .);
-  } >RAM
+  } >RAM :ram
   PROVIDE( __non_tls_bss_start = ADDR(.bss) );
 
   PROVIDE( __bss_start = __tbss_start );

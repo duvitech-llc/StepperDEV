@@ -8,14 +8,9 @@ set(TOOLCHAIN_PREFIX arm-none-eabi-)
 if(WIN32)
     # Common Windows installation paths
     set(TOOLCHAIN_PATHS
-        "C:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10/bin"
-        "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/13.2 Rel1/bin"
-        "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/12.2 Rel1/bin"
-        "C:/Program Files/GNU Arm Embedded Toolchain/10 2021.10/bin"
-        "C:/Program Files/Arm GNU Toolchain arm-none-eabi/13.2 Rel1/bin"
-        "C:/Program Files/Arm GNU Toolchain arm-none-eabi/12.2 Rel1/bin"
-        "$ENV{ProgramFiles\(x86\)}/GNU Arm Embedded Toolchain/10 2021.10/bin"
-        "$ENV{ProgramFiles}/GNU Arm Embedded Toolchain/10 2021.10/bin"
+        "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.3 rel1/bin"
+        "$ENV{ProgramFiles\(x86\)}/Arm GNU Toolchain arm-none-eabi/14.3 rel1/bin"
+        "$ENV{ProgramFiles}/Arm GNU Toolchain arm-none-eabi/14.3 rel1/bin"
     )
     set(TOOLCHAIN_EXT ".exe")
 else()
