@@ -22,6 +22,193 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 PLATFORM_FILE = os.path.join(ROOT, '.vscode', 'platform.json')
 TEMPLATES = ['c_cpp_properties.json', 'launch.json', 'tasks.json']
 
+# Embedded templates — the generator will write these files with platform values
+EMBED_TEMPLATES = {
+    'c_cpp_properties.json': '''{
+    "configurations": [
+        {
+            "name": "Auto",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "STM32L476xx",
+                "USE_HAL_DRIVER"
+            ],
+            "compilerPath": "${TOOLCHAIN_GCC}",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-arm",
+            "compileCommands": "${COMPILE_COMMANDS}",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}
+''',
+
+    'launch.json': '''{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug (OpenOCD)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/${BUILD_DIR}/StepperDEV",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "${GDB_PATH}",
+            "debugServerPath": "${OPENOCD_PATH}",
+            "debugServerArgs": "-f interface/stlink.cfg -f target/stm32l4x.cfg",
+            "serverStarted": "Info : Listening on port [0-9]+ for gdb connection",
+            "filterStderr": true,
+            "filterStdout": false,
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Connect to target",
+                    "text": "target extended-remote localhost:3333",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Reset and halt target",
+                    "text": "monitor reset halt",
+                    "ignoreFailures": false
+                }
+            ],
+            "preLaunchTask": "Flash Firmware",
+            "postDebugTask": "",
+            "miDebuggerPath": "${GDB_PATH}",
+            "debugServerPath": "${OPENOCD_PATH}"
+        },
+        {
+            "name": "Attach (OpenOCD)",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${workspaceFolder}/${BUILD_DIR}/StepperDEV",
+            "MIMode": "gdb",
+            "miDebuggerPath": "${GDB_PATH}",
+            "miDebuggerServerAddress": "localhost:3333",
+            "cwd": "${workspaceFolder}",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "${GDB_PATH}"
+        }
+    ]
+}
+''',
+
+    'tasks.json': '''{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake: Configure (Debug)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--preset",
+                "Debug"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake: Build (Debug)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "${workspaceFolder}/${BUILD_DIR}",
+                "--config",
+                "Debug",
+                "--target",
+                "all",
+                "-j",
+                "10",
+                "--verbose"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "dependsOn": [
+                "CMake: Configure (Debug)"
+            ]
+        },
+        {
+            "label": "CMake: Clean",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "${workspaceFolder}/${BUILD_DIR}",
+                "--target",
+                "clean"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake: Build (Release)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "${workspaceFolder}/build/Release",
+                "--config",
+                "Release",
+                "--target",
+                "all",
+                "-j",
+                "10"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Flash Firmware",
+            "type": "shell",
+            "command": "${OPENOCD_PATH}",
+            "args": [
+                "-f",
+                "interface/stlink.cfg",
+                "-f",
+                "target/stm32l4x.cfg",
+                "-c",
+                "program ${BUILD_DIR}/StepperDEV.hex reset exit"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "dependsOn": [
+                "CMake: Build (Debug)"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        }
+    ]
+}
+'''
+}
+
 def load_platform_config():
     with open(PLATFORM_FILE, 'r', encoding='utf-8') as f:
         cfg = json.load(f)
@@ -51,14 +238,16 @@ def main():
 
     vscode_dir = os.path.join(ROOT, '.vscode')
 
+    # Ensure .vscode directory exists
+    os.makedirs(vscode_dir, exist_ok=True)
+
     for name in TEMPLATES:
-        path = os.path.join(vscode_dir, name)
-        if not os.path.exists(path):
-            print('Skipping missing template:', name)
+        template = EMBED_TEMPLATES.get(name)
+        if template is None:
+            print('No embedded template for', name)
             continue
-        with open(path, 'r', encoding='utf-8') as f:
-            text = f.read()
-        new_text = replace_placeholders(text, mapping)
+        new_text = replace_placeholders(template, mapping)
+        path = os.path.join(vscode_dir, name)
         with open(path, 'w', encoding='utf-8') as f:
             f.write(new_text)
         print('Wrote', path)
