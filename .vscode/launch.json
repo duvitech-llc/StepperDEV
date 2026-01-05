@@ -38,11 +38,11 @@
             "preLaunchTask": "Flash Firmware",
             "postDebugTask": "",
             "linux": {
-                "miDebuggerPath": "/usr/bin/gdb-multiarch",
+                "miDebuggerPath": "arm-none-eabi-gdb",
                 "debugServerPath": "/usr/bin/openocd"
             },
             "windows": {
-                "miDebuggerPath": "/usr/bin/gdb-multiarch",
+                "miDebuggerPath": "arm-none-eabi-gdb.exe",
                 "debugServerPath": "/usr/bin/openocd"
             }
         },
@@ -52,9 +52,8 @@
             "request": "attach",
             "program": "${workspaceFolder}/build/Debug/StepperDEV",
             "MIMode": "gdb",
-            "miDebuggerPath": "gdb-multiarch",
+            "miDebuggerPath": "arm-none-eabi-gdb",
             "miDebuggerServerAddress": "localhost:3333",
-            "cwd": "${workspaceFolder}",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -63,7 +62,7 @@
                 }
             ],
             "linux": {
-                "miDebuggerPath": "/usr/bin/gdb-multiarch"
+                "miDebuggerPath": "arm-none-eabi-gdb"
             },
             "windows": {
                 "miDebuggerPath": "arm-none-eabi-gdb.exe"
