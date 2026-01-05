@@ -36,6 +36,9 @@ compile_commands.json
 # IDE and Editor files
 .vscode/.cortex-debug.*
 .vscode/ipch
+.vscode/launch.json
+.vscode/settings.json
+.vscode/c_cpp_properties.json
 *.code-workspace
 .history/
 *.swp
