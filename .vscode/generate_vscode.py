@@ -57,7 +57,6 @@ EMBED_TEMPLATES = {
             "program": "${workspaceFolder}/${BUILD_DIR}/StepperDEV",
             "args": [],
             "stopAtEntry": true,
-            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -93,9 +92,7 @@ EMBED_TEMPLATES = {
             "request": "attach",
             "program": "${workspaceFolder}/${BUILD_DIR}/StepperDEV",
             "MIMode": "gdb",
-            "miDebuggerPath": "${GDB_PATH}",
             "miDebuggerServerAddress": "localhost:3333",
-            "cwd": "${workspaceFolder}",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
