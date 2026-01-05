@@ -17,6 +17,7 @@ else()
     # Unix-like systems
     set(TOOLCHAIN_PATHS
         "/usr/bin"
+        "/opt/toolchains/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin"
         "/usr/local/bin"
     )
     set(TOOLCHAIN_EXT "")
