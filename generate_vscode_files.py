@@ -22,6 +22,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '.'))
@@ -268,7 +269,24 @@ def replace_placeholders(text, mapping):
 
 def main():
     cfg = load_platform_config()
-    
+
+    # Remove the build directory if it exists
+    build_dir = os.path.join(ROOT, cfg.get('build_dir', 'build/Debug'))
+    if os.path.exists(build_dir):
+        print(f'Removing existing build directory: {build_dir}')
+        shutil.rmtree(build_dir)
+
+    # Ensure .vscode directory exists
+    vscode_dir = os.path.join(ROOT, '.vscode')
+    if os.path.exists(vscode_dir):
+        print(f'Removing existing files in .vscode directory: {vscode_dir}')
+        for file_name in os.listdir(vscode_dir):
+            file_path = os.path.join(vscode_dir, file_name)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
+    os.makedirs(vscode_dir, exist_ok=True)
+
     # Auto-detect ELF name from CMakeLists.txt if not specified
     elf_name = cfg.get('elf_name')
     if not elf_name:
@@ -302,11 +320,6 @@ def main():
         'ELF_NAME': elf_name,
         'SVD_FILE': cfg.get('svd_file', '')
     }
-
-    vscode_dir = os.path.join(ROOT, '.vscode')
-
-    # Ensure .vscode directory exists
-    os.makedirs(vscode_dir, exist_ok=True)
 
     for name in TEMPLATES:
         template = EMBED_TEMPLATES.get(name)
