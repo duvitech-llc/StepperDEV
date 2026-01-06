@@ -12,20 +12,15 @@ jobs:
   build:
     name: Build Debug and Release
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/duvitech-llc/stm32-build-env:latest
+      options: --user 1001
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up CMake
-      uses: jwlawson/actions-setup-cmake@v1
-      with:
-        cmake-version: '3.28.3'
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gcc-arm-none-eabi make
+    # CMake and dependencies are assumed to be in the container image
 
     - name: Configure Debug Build
       run: |
