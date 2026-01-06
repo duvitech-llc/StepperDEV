@@ -103,7 +103,9 @@ void writeRegisterSPI(uint16_t icID, uint8_t address, int32_t value)
     tmc5240_readWriteSPI(icID, &data[0], sizeof(data));
 }
 
-int32_t readRegisterUART(uint16_t icID, uint8_t registerAddress)
+/* UART functions - currently unused, kept for future UART mode support */
+__attribute__((unused))
+static int32_t readRegisterUART(uint16_t icID, uint8_t registerAddress)
 {
     uint8_t data[8] = { 0 };
 
@@ -136,7 +138,8 @@ int32_t readRegisterUART(uint16_t icID, uint8_t registerAddress)
     return ((uint32_t)data[3] << 24) | ((uint32_t)data[4] << 16) | ((uint32_t)data[5] << 8) | data[6];
 }
 
-void writeRegisterUART(uint16_t icID, uint8_t registerAddress, int32_t value)
+__attribute__((unused))
+static void writeRegisterUART(uint16_t icID, uint8_t registerAddress, int32_t value)
 {
     uint8_t data[8];
 

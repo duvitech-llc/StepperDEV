@@ -40,19 +40,42 @@ static StepperGroup stepper_group;
 /*                      TMC5240 Driver Implementation                         */
 /* -------------------------------------------------------------------------- */
 
+/** @brief Active bus type for TMC5240 communication (SPI or UART) */
 static TMC5240BusType activeBus = IC_BUS_SPI;
+
+/** @brief UART node address for TMC5240 (used in UART mode only) */
 static uint8_t nodeAddress = 1;
 
+/* -------------------------------------------------------------------------- */
+/*                    TMC5240 External Interface Functions                    */
+/* -------------------------------------------------------------------------- */
+/*
+ * These functions are required by tmc5240.c as extern declarations.
+ * They provide the hardware abstraction layer for SPI/UART communication
+ * with the TMC5240 stepper motor driver ICs.
+ */
+
+/**
+ * @brief Perform SPI read/write transaction with TMC5240
+ *
+ * This function handles the low-level SPI communication with TMC5240 ICs.
+ * It manages chip select signals for multiple ICs and performs full-duplex
+ * SPI transfers. The TMC5240 uses a 40-bit (5-byte) SPI frame format.
+ *
+ * @param icID       IC identifier (0 = first TMC5240, 1 = second TMC5240)
+ * @param data       Pointer to TX data buffer; receives RX data on return
+ * @param dataLength Number of bytes to transfer (typically 5 for TMC5240)
+ *
+ * @note This function is called by tmc5240_readRegister() and tmc5240_writeRegister()
+ * @note The function includes timing delays for SPI signal integrity
+ */
 void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
 {
-    UNUSED(icID);
     HAL_StatusTypeDef status;
     uint8_t ret_data[5] = { 0 };
     
     /* Add small delay to ensure previous transaction completed */
     delay_us(500);
-    // printf("TMC5240 SPI TX: ");
-    // printBuffer(data, dataLength);
     
     /* Select the TMC5240 by pulling CS low */
     switch(icID)
@@ -72,7 +95,6 @@ void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
     for(volatile int i = 0; i < 20; i++);
     
     /* Perform SPI transmission and reception */
-    /* HAL_SPI_TransmitReceive parameters: hspi, pTxData, pRxData, Size, Timeout */
     status = HAL_SPI_TransmitReceive(&hspi1, data, ret_data, dataLength, 100);
     if(status != HAL_OK) {
         printf("SPI Error during TransmitReceive: %d\r\n", status);
@@ -99,35 +121,68 @@ void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength)
     for(size_t i = 0; i < dataLength; i++) {
         data[i] = ret_data[i];
     }
-    
-    // printf("TMC5240 SPI RX: ");
-    // printBuffer(data, dataLength);
 
     if(status != HAL_OK) {
         printf("SPI Error: %d\r\n", status);
     }
 }
 
+/**
+ * @brief Perform UART read/write transaction with TMC5240
+ *
+ * This function would handle UART communication with TMC5240 ICs.
+ * Currently not implemented as SPI mode is used.
+ *
+ * @param icID        IC identifier
+ * @param data        Pointer to data buffer
+ * @param writeLength Number of bytes to write
+ * @param readLength  Number of bytes to read
+ * @return true if successful, false otherwise
+ *
+ * @note Not implemented - UART mode not supported in this configuration
+ */
 bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength)
 {
-    UNUSED(icID);
-    UNUSED(data);
-    UNUSED(writeLength);
-    UNUSED(readLength);
+    /* Suppress unused parameter warnings */
+    (void)icID;
+    (void)data;
+    (void)writeLength;
+    (void)readLength;
     return false;
 }
 
+/**
+ * @brief Get the communication bus type for a TMC5240 IC
+ *
+ * Returns whether SPI or UART is used for communication with the specified IC.
+ *
+ * @param icID IC identifier
+ * @return TMC5240BusType indicating IC_BUS_SPI or IC_BUS_UART
+ */
 TMC5240BusType tmc5240_getBusType(uint16_t icID)
 {
     UNUSED(icID);
     return activeBus;
 }
 
+/**
+ * @brief Get the UART node address for a TMC5240 IC
+ *
+ * Returns the configured UART address for the specified IC.
+ * Only relevant when using UART communication mode.
+ *
+ * @param icID IC identifier
+ * @return UART node address (0-255)
+ */
 uint8_t tmc5240_getNodeAddress(uint16_t icID)
 {
     UNUSED(icID);
     return nodeAddress;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                      TMC5240 Stepper Driver Callbacks                      */
+/* -------------------------------------------------------------------------- */
 
 /**
  * @brief Initialize TMC5240 for the given stepper
