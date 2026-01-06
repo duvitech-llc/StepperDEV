@@ -38,6 +38,7 @@ compile_commands.json
 .vscode/ipch
 .vscode/launch.json
 .vscode/settings.json
+.vscode/tasks.json
 .vscode/c_cpp_properties.json
 *.code-workspace
 .history/
@@ -63,3 +64,5 @@ Thumbs.db
 *.suo
 *.userosscache
 *.sln.docstates
+
+platform.json
