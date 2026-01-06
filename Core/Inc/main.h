@@ -82,6 +82,7 @@ extern CRC_HandleTypeDef hcrc;
 extern UART_HandleTypeDef huart2;
 #define DEBUG_UART huart2
 
+extern SPI_HandleTypeDef hspi1;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -31,6 +31,8 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/jsmn.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/lwrb.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/logging.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/stepper.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/stepper_config.c
 )
 
 # STM32 HAL/LL Drivers
