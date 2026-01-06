@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  app:
+    volumes:
+      - ..:/workspace.
+    privileged: true
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
