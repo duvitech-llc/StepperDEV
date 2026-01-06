@@ -20,6 +20,15 @@ typedef struct
     void (*set_enable)(struct Stepper *stepper, bool enable);
     void (*set_dir)(struct Stepper *stepper, bool dir);
     void (*step_pulse)(struct Stepper *stepper);
+
+    /* Optional: move to absolute position (for drivers with internal ramp generators) */
+    void (*move_to)(struct Stepper *stepper, int32_t position);
+
+    /* Optional: get current position from driver */
+    int32_t (*get_position)(struct Stepper *stepper);
+
+    /* Optional: check if position reached */
+    bool (*position_reached)(struct Stepper *stepper);
 } StepperDriver;
 
 /* Stepper instance */
@@ -72,6 +81,15 @@ void stepper_set_done_callback(Stepper *stepper,
                                StepperDoneCallback cb);
 
 bool stepper_update(Stepper *stepper, uint32_t delta_us);
+
+/* Move to absolute position (for drivers with internal motion controllers) */
+void stepper_move_to_position(Stepper *stepper, int32_t position);
+
+/* Get current position from driver */
+int32_t stepper_get_position(Stepper *stepper);
+
+/* Check if target position has been reached */
+bool stepper_position_reached(Stepper *stepper);
 
 
 /* Register completion callback */

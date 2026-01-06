@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "logging.h"
+#include "stepper.h"
 #include "stepper_config.h"
 #include <stdio.h>
 #include <stdbool.h>
@@ -155,8 +156,8 @@ int main(void)
   printf("Configured Motor 1\r\n");
 
   /* Move both motors 2000 steps forward using the stepper API */
-  stepper_config_move_to(stepper0, 2000);
-  stepper_config_move_to(stepper1, 2000);
+  stepper_move_to_position(stepper0, 2000);
+  stepper_move_to_position(stepper1, 2000);
 #endif
 
   /* Print register configurations using stepper API */
@@ -503,14 +504,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         Stepper *stepper0 = stepper_config_get_stepper(STEPPER_0);
         Stepper *stepper1 = stepper_config_get_stepper(STEPPER_1);
 
-        int32_t currentPos = stepper_config_get_position(stepper0);
+        int32_t currentPos = stepper_get_position(stepper0);
         int32_t targetPos = currentPos + 2000; // Move 2000 steps forward
-        stepper_config_move_to(stepper0, targetPos);
+        stepper_move_to_position(stepper0, targetPos);
         printf("Moving 0 to position: %ld\r\n", targetPos);
         
-        currentPos = stepper_config_get_position(stepper1);
+        currentPos = stepper_get_position(stepper1);
         targetPos = currentPos + 2000; // Move 2000 steps forward
-        stepper_config_move_to(stepper1, targetPos);
+        stepper_move_to_position(stepper1, targetPos);
         printf("Moving 1 to position: %ld\r\n", targetPos);
     }
   }

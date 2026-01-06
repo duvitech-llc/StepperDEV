@@ -291,22 +291,12 @@ static void tmc5240_driver_step_pulse(Stepper *stepper)
      * This is a no-op for the internal motion controller. */
 }
 
-/* TMC5240 driver interface */
-static const StepperDriver tmc5240_driver = {
-    .init = tmc5240_driver_init,
-    .set_enable = tmc5240_driver_set_enable,
-    .set_dir = tmc5240_driver_set_dir,
-    .step_pulse = tmc5240_driver_step_pulse
-};
-
-/* -------------------------------------------------------------------------- */
-/*                    TMC5240-Specific Helper Functions                       */
-/* -------------------------------------------------------------------------- */
-
 /**
- * @brief Move stepper to absolute position using TMC5240's internal ramp generator
+ * @brief Move to absolute position using TMC5240's internal ramp generator
+ *
+ * This is the driver callback for stepper_move_to_position().
  */
-void stepper_config_move_to(Stepper *stepper, int32_t position)
+static void tmc5240_driver_move_to(Stepper *stepper, int32_t position)
 {
     if (!stepper || !stepper->hw_context)
         return;
@@ -325,21 +315,66 @@ void stepper_config_move_to(Stepper *stepper, int32_t position)
 }
 
 /**
+ * @brief Get current actual position from TMC5240
+ *
+ * This is the driver callback for stepper_get_position().
+ */
+static int32_t tmc5240_driver_get_position(Stepper *stepper)
+{
+    if (!stepper || !stepper->hw_context)
+        return 0;
+
+    TMC5240_Context *ctx = (TMC5240_Context *)stepper->hw_context;
+    return tmc5240_readRegister(ctx->icID, TMC5240_XACTUAL);
+}
+
+/**
+ * @brief Check if motor has reached target position
+ *
+ * This is the driver callback for stepper_position_reached().
+ */
+static bool tmc5240_driver_position_reached(Stepper *stepper)
+{
+    if (!stepper || !stepper->hw_context)
+        return true;
+
+    TMC5240_Context *ctx = (TMC5240_Context *)stepper->hw_context;
+    uint32_t status = tmc5240_readRegister(ctx->icID, TMC5240_RAMPSTAT);
+    return (status & TMC5240_POSITION_REACHED_MASK) != 0;
+}
+
+/* TMC5240 driver interface */
+static const StepperDriver tmc5240_driver = {
+    .init = tmc5240_driver_init,
+    .set_enable = tmc5240_driver_set_enable,
+    .set_dir = tmc5240_driver_set_dir,
+    .step_pulse = tmc5240_driver_step_pulse,
+    .move_to = tmc5240_driver_move_to,
+    .get_position = tmc5240_driver_get_position,
+    .position_reached = tmc5240_driver_position_reached
+};
+
+/* -------------------------------------------------------------------------- */
+/*                    TMC5240-Specific Helper Functions                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Move stepper to absolute position using TMC5240's internal ramp generator
+ *
+ * This is a convenience wrapper around stepper_move_to_position().
+ */
+void stepper_config_move_to(Stepper *stepper, int32_t position)
+{
+    tmc5240_driver_move_to(stepper, position);
+}
+
+/**
  * @brief Move stepper by relative steps using TMC5240's internal ramp generator
  */
 void stepper_config_move_by(Stepper *stepper, int32_t steps)
 {
-    if (!stepper || !stepper->hw_context)
-        return;
-
-    TMC5240_Context *ctx = (TMC5240_Context *)stepper->hw_context;
-    uint16_t icID = ctx->icID;
-
-    /* Read current position */
-    int32_t current_pos = tmc5240_readRegister(icID, TMC5240_XACTUAL);
-
-    /* Move to new position */
-    stepper_config_move_to(stepper, current_pos + steps);
+    int32_t current_pos = tmc5240_driver_get_position(stepper);
+    tmc5240_driver_move_to(stepper, current_pos + steps);
 }
 
 /**
@@ -364,28 +399,22 @@ void stepper_config_stop(Stepper *stepper)
 
 /**
  * @brief Get current actual position from TMC5240
+ *
+ * This is a convenience wrapper around stepper_get_position().
  */
 int32_t stepper_config_get_position(Stepper *stepper)
 {
-    if (!stepper || !stepper->hw_context)
-        return 0;
-
-    TMC5240_Context *ctx = (TMC5240_Context *)stepper->hw_context;
-    return tmc5240_readRegister(ctx->icID, TMC5240_XACTUAL);
+    return tmc5240_driver_get_position(stepper);
 }
 
 /**
  * @brief Check if motor has reached target position
+ *
+ * This is a convenience wrapper around stepper_position_reached().
  */
 bool stepper_config_position_reached(Stepper *stepper)
 {
-    if (!stepper || !stepper->hw_context)
-        return true;
-
-    TMC5240_Context *ctx = (TMC5240_Context *)stepper->hw_context;
-    int32_t rampstat = tmc5240_readRegister(ctx->icID, TMC5240_RAMPSTAT);
-
-    return (rampstat & TMC5240_RS_POSREACHED) != 0;
+    return tmc5240_driver_position_reached(stepper);
 }
 
 /**

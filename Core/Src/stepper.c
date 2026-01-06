@@ -138,6 +138,43 @@ bool stepper_update(Stepper *stepper, uint32_t delta_us)
 }
 
 /* -------------------------------------------------------------------------- */
+/*                        Position Control Functions                          */
+/* -------------------------------------------------------------------------- */
+
+void stepper_move_to_position(Stepper *stepper, int32_t position)
+{
+    if (!stepper || !stepper->driver)
+        return;
+
+    if (stepper->driver->move_to)
+        stepper->driver->move_to(stepper, position);
+}
+
+int32_t stepper_get_position(Stepper *stepper)
+{
+    if (!stepper || !stepper->driver)
+        return 0;
+
+    if (stepper->driver->get_position)
+        return stepper->driver->get_position(stepper);
+
+    /* Fallback to internal position if driver doesn't implement get_position */
+    return stepper->position;
+}
+
+bool stepper_position_reached(Stepper *stepper)
+{
+    if (!stepper || !stepper->driver)
+        return true;
+
+    if (stepper->driver->position_reached)
+        return stepper->driver->position_reached(stepper);
+
+    /* Fallback: assume reached if no steps remaining */
+    return (stepper->steps_remaining == 0);
+}
+
+/* -------------------------------------------------------------------------- */
 /*                            Stepper Group API                                */
 /* -------------------------------------------------------------------------- */
 
