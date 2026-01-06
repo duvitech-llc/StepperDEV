@@ -6,6 +6,7 @@ based on .vscode/platform.json. It replaces placeholders in the existing
 
 Placeholders supported:
 - ${TOOLCHAIN_GCC}
+- ${TOOLCHAIN_BIN_PATH}
 - ${GDB_PATH}
 - ${OPENOCD_PATH}
 - ${BUILD_DIR}
@@ -25,7 +26,7 @@ import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '.'))
 PLATFORM_FILE = os.path.join(ROOT, 'platform.json')
-TEMPLATES = ['c_cpp_properties.json', 'launch.json', 'tasks.json']
+TEMPLATES = ['c_cpp_properties.json', 'launch.json', 'tasks.json', 'extensions.json']
 
 # Embedded templates — the generator will write these files with platform values
 EMBED_TEMPLATES = {
@@ -106,7 +107,12 @@ EMBED_TEMPLATES = {
                 "Debug"
             ],
             "group": "build",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "PATH": "${TOOLCHAIN_BIN_PATH}:${env:PATH}"
+                }
+            }
         },
         {
             "label": "CMake: Build (Debug)",
@@ -132,7 +138,12 @@ EMBED_TEMPLATES = {
             ],
             "dependsOn": [
                 "CMake: Configure (Debug)"
-            ]
+            ],
+            "options": {
+                "env": {
+                    "PATH": "${TOOLCHAIN_BIN_PATH}:${env:PATH}"
+                }
+            }
         },
         {
             "label": "CMake: Clean",
@@ -145,7 +156,12 @@ EMBED_TEMPLATES = {
                 "clean"
             ],
             "group": "build",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "PATH": "${TOOLCHAIN_BIN_PATH}:${env:PATH}"
+                }
+            }
         },
         {
             "label": "CMake: Build (Release)",
@@ -164,7 +180,12 @@ EMBED_TEMPLATES = {
             "group": "build",
             "problemMatcher": [
                 "$gcc"
-            ]
+            ],
+            "options": {
+                "env": {
+                    "PATH": "${TOOLCHAIN_BIN_PATH}:${env:PATH}"
+                }
+            }
         },
         {
             "label": "Flash Firmware",
@@ -188,6 +209,17 @@ EMBED_TEMPLATES = {
             }
         }
     ]
+}
+''',
+
+    'extensions.json': '''{
+    "recommendations": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "marus25.cortex-debug",
+        "ms-vscode.hexeditor"
+    ],
+    "unwantedRecommendations": []
 }
 '''
 }
@@ -248,8 +280,19 @@ def main():
             elf_name = 'firmware'  # Fallback default
             print(f'Warning: Could not detect ELF name, using default: {elf_name}')
     
+    # Extract toolchain bin path from toolchain_gcc if not explicitly set
+    toolchain_bin_path = cfg.get('toolchain_bin_path')
+    if not toolchain_bin_path:
+        toolchain_gcc = cfg.get('toolchain_gcc', '')
+        if toolchain_gcc:
+            # Extract directory path (remove the gcc executable name)
+            toolchain_bin_path = os.path.dirname(toolchain_gcc)
+        else:
+            toolchain_bin_path = ''
+    
     mapping = {
         'TOOLCHAIN_GCC': cfg.get('toolchain_gcc', ''),
+        'TOOLCHAIN_BIN_PATH': toolchain_bin_path,
         'GDB_PATH': cfg.get('gdb', ''),
         'OPENOCD_PATH': cfg.get('openocd', ''),
         'BUILD_DIR': cfg.get('build_dir', 'build/Debug'),
