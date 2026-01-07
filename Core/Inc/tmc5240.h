@@ -9,7 +9,7 @@
 #ifndef TMC_IC_TMC5240_H_
 #define TMC_IC_TMC5240_H_
 
-#include "TMC5240_HW_Abstraction.h"
+#include "tmc5240_hw_abstraction.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
