@@ -109,6 +109,6 @@ void stepper_group_set_steps(StepperGroup *group, int32_t steps);
 void stepper_group_set_speed(StepperGroup *group, uint32_t us_per_step);
 
 bool stepper_group_update(StepperGroup *group, uint32_t delta_us);
-
+void stepper_group_move_by(StepperGroup *group, int32_t steps);
 
 #endif // STEPPER_H

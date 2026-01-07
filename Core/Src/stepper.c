@@ -225,6 +225,18 @@ void stepper_group_set_speed(StepperGroup *group, uint32_t us_per_step)
         stepper_set_speed(group->steppers[i], us_per_step);
 }
 
+void stepper_group_move_by(StepperGroup *group, int32_t steps)
+{
+    if (!group)
+        return;
+    for (uint8_t i = 0; i < group->count; i++) {
+        Stepper *stepper = group->steppers[i];
+        int32_t currentPos = stepper_get_position(stepper);
+        int32_t targetPos = currentPos + steps;
+        stepper_move_to_position(stepper, targetPos);
+    }
+}
+
 /*
  * Returns true if ANY stepper in the group stepped.
  */

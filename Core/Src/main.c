@@ -148,16 +148,18 @@ int main(void)
   printf("Initializing steppers via stepper API...\r\n");
   stepper_config_init();
 
-  /* Get stepper instances */
+  /* Get stepper group and stepper instances */
+  StepperGroup *group = stepper_config_get_group();
   Stepper *stepper0 = stepper_config_get_stepper(STEPPER_0);
   Stepper *stepper1 = stepper_config_get_stepper(STEPPER_1);
 
   printf("Configured Motor 0\r\n");
   printf("Configured Motor 1\r\n");
 
-  /* Move both motors 2000 steps forward using the stepper API */
-  stepper_move_to_position(stepper0, 2000);
-  stepper_move_to_position(stepper1, 2000);
+  /* Ensure both steppers are in the group (should already be added in config init) */
+  stepper_group_add(group, stepper0);
+  stepper_group_add(group, stepper1);
+
 #endif
 
   /* Print register configurations using stepper API */
@@ -501,18 +503,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     if(b2Kstep)
     {
-        Stepper *stepper0 = stepper_config_get_stepper(STEPPER_0);
-        Stepper *stepper1 = stepper_config_get_stepper(STEPPER_1);
-
-        int32_t currentPos = stepper_get_position(stepper0);
-        int32_t targetPos = currentPos + 2000; // Move 2000 steps forward
-        stepper_move_to_position(stepper0, targetPos);
-        printf("Moving 0 to position: %ld\r\n", targetPos);
-        
-        currentPos = stepper_get_position(stepper1);
-        targetPos = currentPos + 2000; // Move 2000 steps forward
-        stepper_move_to_position(stepper1, targetPos);
-        printf("Moving 1 to position: %ld\r\n", targetPos);
+      StepperGroup *group = stepper_config_get_group();
+      stepper_group_move_by(group, 2000);
+      printf("Stepper group: all moving +2000 steps synchronously\r\n");
     }
   }
 }
