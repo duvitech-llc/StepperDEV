@@ -1,39 +1,42 @@
-name: Build STM32 Project
+name: Build firmware using published build image
 
 on:
+  workflow_dispatch: {}
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   build:
-    name: Build Debug and Release
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/duvitech-llc/stm32-build-env:latest
-      options: --user 1001
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # To use a private container image, authenticate to your registry first.
+      # 1. Store your registry credentials as GitHub secrets (e.g., REGISTRY_USERNAME, REGISTRY_PASSWORD, REGISTRY_URL).
+      #    Go to your repository > Settings > Secrets and variables > Actions > New repository secret.
+      # 2. Add a docker/login-action step before pulling or running the image.
+      - name: Log in to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_URL }} # e.g. ghcr.io, docker.io, etc.
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # CMake and dependencies are assumed to be in the container image
+      - name: Pull build image
+        run: docker pull ghcr.io/duvitech-llc/stm32-build-env:latest
 
-    - name: Configure Debug Build
-      run: |
-        cmake -S . -B build/Debug -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake
+      - name: Build inside container
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE":/workspace \
+            -w /workspace \
+            --workdir /workspace \
+            ghcr.io/duvitech-llc/stm32-build-env:latest \
+            bash -lc "cmake --preset Debug && cmake --build build/Debug --config Debug --target all -j 10"
 
-    - name: Build Debug
-      run: |
-        cmake --build build/Debug
-
-    - name: Configure Release Build
-      run: |
-        cmake -S . -B build/Release -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake
-
-    - name: Build Release
-      run: |
-        cmake --build build/Release
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stepperdev-fw
+          path: build/Debug/*.hex
