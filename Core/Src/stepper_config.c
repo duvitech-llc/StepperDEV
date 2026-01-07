@@ -500,6 +500,14 @@ StepperGroup *stepper_config_get_group(void)
 }
 
 /**
+ * @brief Get count of configured steppers
+ */
+uint8_t stepper_config_get_count(void)
+{
+    return STEPPER_COUNT;
+}
+
+/**
  * @brief Print TMC5240 register values for a stepper
  */
 void stepper_config_print_registers(Stepper *stepper)

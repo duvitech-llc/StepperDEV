@@ -11,6 +11,9 @@ struct Stepper;
 /* Completion callback */
 typedef void (*StepperDoneCallback)(struct Stepper *stepper);
 
+/* Limit switch callback */
+typedef void (*StepperLimitCallback)(struct Stepper *stepper, void *sw);
+
 /* Hardware driver interface */
 typedef struct
 {
@@ -48,6 +51,11 @@ typedef struct Stepper
     uint32_t us_accumulator;
 
     StepperDoneCallback done_cb;
+    
+    /* Limit switch support */
+    bool limits_enabled;
+    bool limit_hit;
+    StepperLimitCallback limit_cb;
 } Stepper;
 
 /* Stepper group */
@@ -92,9 +100,45 @@ int32_t stepper_get_position(Stepper *stepper);
 bool stepper_position_reached(Stepper *stepper);
 
 
-/* Register completion callback */
-void stepper_set_done_callback(Stepper *stepper,
-                               StepperDoneCallback cb);
+/* --------------------------------------------------------------------------
+ *  Generalized Stepper API - Higher-level abstraction
+ * -------------------------------------------------------------------------- */
+
+/* Initialize stepper (generic initialization wrapper) */
+void Stepper_init(void *context);
+
+/* Set acceleration (implementation-dependent units) */
+void Stepper_setAcceleration(volatile Stepper *s, float a);
+
+/* Check if motor is currently moving */
+bool Stepper_isMoving(volatile Stepper *s);
+
+/* Move to absolute position */
+void Stepper_move(volatile Stepper *s, int32_t position);
+
+/* Stop motor motion */
+void Stepper_stop(volatile Stepper *s);
+
+/* Start/enable motor */
+void Stepper_start(volatile Stepper *s);
+
+/* Wait for motor to stop (with timeout in ms, 0 = wait forever) */
+void Stepper_awaitStop(volatile Stepper *s, uint32_t timeout);
+
+/* Wait for limit switch (with timeout in ms, returns true if limit hit) */
+bool Stepper_awaitLimit(volatile Stepper *s, uint32_t timeout);
+
+/* Enable limit switch handling */
+void Stepper_enableLimits(volatile Stepper *s);
+
+/* Callback when limit switch is hit */
+void Stepper_hitLimit(volatile Stepper *s, void *sw);
+
+/* Disable motor */
+void Stepper_disable(volatile Stepper *s);
+
+/* Get positions of all steppers in system */
+int32_t *Stepper_positions(void);
 
 
 /* --------------------------------------------------------------------------

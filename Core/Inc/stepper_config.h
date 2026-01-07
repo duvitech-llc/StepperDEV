@@ -65,6 +65,13 @@ Stepper *stepper_config_get_stepper(uint8_t index);
  */
 StepperGroup *stepper_config_get_group(void);
 
+/**
+ * @brief Get count of configured steppers
+ *
+ * @return Number of stepper motors configured in the system
+ */
+uint8_t stepper_config_get_count(void);
+
 /* -------------------------------------------------------------------------- */
 /*                      TMC5240-Specific Motion API                           */
 /* -------------------------------------------------------------------------- */

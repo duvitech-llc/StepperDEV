@@ -1,4 +1,14 @@
 #include "stepper.h"
+#include <string.h>
+
+/* External stepper configuration - must be defined in stepper_config.c */
+extern Stepper *stepper_config_get_stepper(uint8_t index);
+extern void stepper_config_set_acceleration(Stepper *stepper, uint32_t acceleration);
+extern void stepper_config_stop(Stepper *stepper);
+extern uint8_t stepper_config_get_count(void);
+
+/* Static position array for Stepper_positions() */
+static int32_t stepper_positions_array[4];  /* Max 4 steppers */
 
 /* -------------------------------------------------------------------------- */
 /*                              Stepper API                                   */
@@ -24,6 +34,11 @@ void stepper_init(Stepper *stepper,
     stepper->us_accumulator = 0;
 
     stepper->done_cb = 0;
+    
+    /* Initialize limit switch support */
+    stepper->limits_enabled = false;
+    stepper->limit_hit = false;
+    stepper->limit_cb = 0;
 
     /* Driver-specific initialization hook */
     if (stepper->driver && stepper->driver->init)
@@ -251,4 +266,167 @@ bool stepper_group_update(StepperGroup *group, uint32_t delta_us)
         stepped |= stepper_update(group->steppers[i], delta_us);
 
     return stepped;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                        Generalized Stepper API                             */
+/* -------------------------------------------------------------------------- */
+
+void Stepper_init(void *context)
+{
+    /* Generic initialization - context could be config structure */
+    /* In this implementation, initialization is handled by stepper_config_init() */
+    (void)context;  /* Unused in this implementation */
+}
+
+void Stepper_setAcceleration(volatile Stepper *s, float a)
+{
+    if (!s)
+        return;
+    
+    /* Convert float acceleration to driver-specific units */
+    /* For TMC5240, typical acceleration range is 0-65535 */
+    uint32_t accel = (uint32_t)a;
+    
+    /* Forward to driver-specific implementation */
+    stepper_config_set_acceleration((Stepper *)s, accel);
+}
+
+bool Stepper_isMoving(volatile Stepper *s)
+{
+    if (!s)
+        return false;
+    
+    /* Check if position has been reached (inverse of is_moving) */
+    return !stepper_position_reached((Stepper *)s);
+}
+
+void Stepper_move(volatile Stepper *s, int32_t position)
+{
+    if (!s)
+        return;
+    
+    /* Move to absolute position */
+    stepper_move_to_position((Stepper *)s, position);
+}
+
+void Stepper_stop(volatile Stepper *s)
+{
+    if (!s)
+        return;
+    
+    /* Stop motor motion */
+    stepper_config_stop((Stepper *)s);
+}
+
+void Stepper_start(volatile Stepper *s)
+{
+    if (!s)
+        return;
+    
+    /* Enable motor */
+    stepper_enable((Stepper *)s, true);
+}
+
+void Stepper_awaitStop(volatile Stepper *s, uint32_t timeout)
+{
+    if (!s)
+        return;
+    
+    uint32_t elapsed = 0;
+    const uint32_t poll_interval = 10;  /* 10ms polling interval */
+    
+    /* Wait until motor stops or timeout */
+    while (Stepper_isMoving(s))
+    {
+        /* Simple delay - in real implementation, use HAL_Delay or similar */
+        for (volatile uint32_t i = 0; i < 10000; i++);
+        
+        if (timeout > 0)
+        {
+            elapsed += poll_interval;
+            if (elapsed >= timeout)
+                break;
+        }
+    }
+}
+
+bool Stepper_awaitLimit(volatile Stepper *s, uint32_t timeout)
+{
+    if (!s)
+        return false;
+    
+    uint32_t elapsed = 0;
+    const uint32_t poll_interval = 10;  /* 10ms polling interval */
+    
+    /* Wait until limit is hit or timeout */
+    while (!((Stepper *)s)->limit_hit)
+    {
+        /* Simple delay */
+        for (volatile uint32_t i = 0; i < 10000; i++);
+        
+        if (timeout > 0)
+        {
+            elapsed += poll_interval;
+            if (elapsed >= timeout)
+                return false;
+        }
+    }
+    
+    return true;
+}
+
+void Stepper_enableLimits(volatile Stepper *s)
+{
+    if (!s)
+        return;
+    
+    ((Stepper *)s)->limits_enabled = true;
+}
+
+void Stepper_hitLimit(volatile Stepper *s, void *sw)
+{
+    if (!s)
+        return;
+    
+    Stepper *stepper = (Stepper *)s;
+    
+    if (stepper->limits_enabled)
+    {
+        stepper->limit_hit = true;
+        
+        /* Stop motor when limit is hit */
+        Stepper_stop(s);
+        
+        /* Call limit callback if registered */
+        if (stepper->limit_cb)
+            stepper->limit_cb(stepper, sw);
+    }
+}
+
+void Stepper_disable(volatile Stepper *s)
+{
+    if (!s)
+        return;
+    
+    /* Disable motor */
+    stepper_enable((Stepper *)s, false);
+}
+
+int32_t *Stepper_positions(void)
+{
+    /* Get count of steppers in system */
+    uint8_t count = stepper_config_get_count();
+    
+    /* Update positions array */
+    for (uint8_t i = 0; i < count && i < 4; i++)
+    {
+        Stepper *stepper = stepper_config_get_stepper(i);
+        if (stepper)
+            stepper_positions_array[i] = stepper_get_position(stepper);
+        else
+            stepper_positions_array[i] = 0;
+    }
+    
+    return stepper_positions_array;
 }
