@@ -6,7 +6,7 @@
 * This software is proprietary to Analog Devices, Inc. and its licensors.
 *******************************************************************************/
 
-#include "TMC5240.h"
+#include "tmc5240.h"
 
 #include <stdio.h>
 

@@ -8,7 +8,7 @@
 #include "main.h"
 #include "stepper_config.h"
 #include "stepper.h"
-#include "TMC5240.h"
+#include "tmc5240.h"
 #include "util.h"
 #include <stdio.h>
 
