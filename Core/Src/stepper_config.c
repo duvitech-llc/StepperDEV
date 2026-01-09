@@ -127,48 +127,30 @@ void stepper_config_print_registers(Stepper *stepper)
 
     printf("\r\nStepper %u Configuration:\r\n", stepper->stepper_id);
 
-    value = tmc5240_readRegister(icID, TMC5240_GCONF);
-    printf("  GCONF:         0x%08lX\r\n", (unsigned long)value);
+    /* Helper to read, print and add a small CS spacing delay to avoid
+     * SPI timing issues when querying multiple registers quickly. */
+#define READ_PRINT(reg, label)                         \
+    do {                                              \
+        value = tmc5240_readRegister(icID, (reg));    \
+        printf("  %-14s 0x%08lX\r\n", (label), (unsigned long)value); \
+        for (volatile int _d = 0; _d < 50; _d++);     \
+    } while (0)
 
-    value = tmc5240_readRegister(icID, TMC5240_GSTAT);
-    printf("  GSTAT:         0x%08lX\r\n", (unsigned long)value);
+    READ_PRINT(TMC5240_GCONF, "GCONF:");
+    READ_PRINT(TMC5240_GSTAT, "GSTAT:");
+    READ_PRINT(TMC5240_DRV_CONF, "DRV_CONF:");
+    READ_PRINT(TMC5240_GLOBAL_SCALER, "GLOBAL_SCALER:");
+    READ_PRINT(TMC5240_CHOPCONF, "CHOPCONF:");
+    READ_PRINT(TMC5240_IHOLD_IRUN, "IHOLD_IRUN:");
+    READ_PRINT(TMC5240_AMAX, "AMAX:");
+    READ_PRINT(TMC5240_DMAX, "DMAX:");
+    READ_PRINT(TMC5240_VMAX, "VMAX:");
+    READ_PRINT(TMC5240_RAMPMODE, "RAMPMODE:");
+    READ_PRINT(TMC5240_XACTUAL, "XACTUAL:");
+    READ_PRINT(TMC5240_XTARGET, "XTARGET:");
+    READ_PRINT(TMC5240_VACTUAL, "VACTUAL:");
+    READ_PRINT(TMC5240_INP_OUT, "INP_OUT:");
+    READ_PRINT(TMC5240_DRVSTATUS, "DRVSTATUS:");
 
-    value = tmc5240_readRegister(icID, TMC5240_DRV_CONF);
-    printf("  DRV_CONF:      0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_GLOBAL_SCALER);
-    printf("  GLOBAL_SCALER: 0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_CHOPCONF);
-    printf("  CHOPCONF:      0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_IHOLD_IRUN);
-    printf("  IHOLD_IRUN:    0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_AMAX);
-    printf("  AMAX:          0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_DMAX);
-    printf("  DMAX:          0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_VMAX);
-    printf("  VMAX:          0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_RAMPMODE);
-    printf("  RAMPMODE:      0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_XACTUAL);
-    printf("  XACTUAL:       0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_XTARGET);
-    printf("  XTARGET:       0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_VACTUAL);
-    printf("  VACTUAL:       0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_INP_OUT);
-    printf("  INP_OUT:       0x%08lX\r\n", (unsigned long)value);
-
-    value = tmc5240_readRegister(icID, TMC5240_DRVSTATUS);
-    printf("  DRVSTATUS:     0x%08lX\r\n", (unsigned long)value);
+#undef READ_PRINT
 }

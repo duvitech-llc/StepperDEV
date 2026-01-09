@@ -77,7 +77,10 @@ static void MX_SPI1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-/* USER CODE END 0 */
+  Stepper *s0 = NULL;
+  Stepper *s1 = NULL;
+
+  StepperGroup *z_axis = NULL;
 
 /* USER CODE END 0 */
 
@@ -153,10 +156,10 @@ int main(void)
 
   /* Print register configurations using stepper API */
   
-  Stepper *s0 = stepper_config_get_stepper(STEPPER_0);
-  Stepper *s1 = stepper_config_get_stepper(STEPPER_1);
+  s0 = stepper_config_get_stepper(STEPPER_0);
+  s1 = stepper_config_get_stepper(STEPPER_1);
 
-  StepperGroup *z_axis = stepper_config_get_group();
+  z_axis = stepper_config_get_group();
 
   stepper_config_print_registers(s0);
   stepper_config_print_registers(s1);
@@ -165,9 +168,6 @@ int main(void)
   stepper_enable(s1, true);
 
   motorEnabled = true;
-
-  stepper_group_move_to(z_axis, 5000);
-
 
   printf("Entering Main LOOP.\r\n\r\n");
   /* USER CODE END 2 */
@@ -502,8 +502,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     if(b2Kstep)
     {
-      //StepperGroup *group = stepper_config_get_group();
-      //stepper_group_move_by(group, 2000);
+      stepper_group_move_to(z_axis, 2000);
       printf("Stepper group: all moving +2000 steps synchronously\r\n");
     }
   }
