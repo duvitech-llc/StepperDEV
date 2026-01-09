@@ -1,0 +1,183 @@
+#include "tmc5240_driver.h"
+#include <stdio.h>
+
+/* --------------------------------------------------------------------------
+ * Driver registry (IC ID → context)
+ * -------------------------------------------------------------------------- */
+
+#define TMC5240_MAX_IC  4
+
+static TMC5240_Context *tmc_ctx_table[TMC5240_MAX_IC] = {0};
+
+static inline TMC5240_Context *ctx_from_id(uint16_t icID)
+{
+    if (icID >= TMC5240_MAX_IC)
+        return NULL;
+    return tmc_ctx_table[icID];
+}
+
+/* --------------------------------------------------------------------------
+ * Trinamic HAL required callbacks
+ * -------------------------------------------------------------------------- */
+
+void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t len)
+{
+    TMC5240_Context *ctx = ctx_from_id(icID);
+    if (!ctx || !ctx->hspi)
+        return;
+
+    uint8_t rx[5] = {0};
+
+    HAL_GPIO_WritePin(ctx->cs_port, ctx->cs_pin, GPIO_PIN_RESET);
+
+    /* Small CS setup delay */
+    for (volatile int i = 0; i < 20; i++);
+
+    HAL_SPI_TransmitReceive(ctx->hspi, data, rx, len, HAL_MAX_DELAY);
+
+    for (volatile int i = 0; i < 20; i++);
+
+    HAL_GPIO_WritePin(ctx->cs_port, ctx->cs_pin, GPIO_PIN_SET);
+
+    for (size_t i = 0; i < len; i++)
+        data[i] = rx[i];
+}
+
+bool tmc5240_readWriteUART(uint16_t icID,
+                           uint8_t *data,
+                           size_t writeLength,
+                           size_t readLength)
+{
+    (void)icID;
+    (void)data;
+    (void)writeLength;
+    (void)readLength;
+    return false;
+}
+
+TMC5240BusType tmc5240_getBusType(uint16_t icID)
+{
+    (void)icID;
+    return IC_BUS_SPI;
+}
+
+uint8_t tmc5240_getNodeAddress(uint16_t icID)
+{
+    (void)icID;
+    return 1;
+}
+
+/* --------------------------------------------------------------------------
+ * StepperDriver callbacks
+ * -------------------------------------------------------------------------- */
+
+static void tmc5240_init(Stepper *s)
+{
+    TMC5240_Context *ctx = s->hw_context;
+    tmc_ctx_table[ctx->icID] = ctx;
+
+    tmc5240_writeRegister(ctx->icID, TMC5240_GCONF, 0x00000008);
+    tmc5240_writeRegister(ctx->icID, TMC5240_IHOLD_IRUN, 0x00070A03);
+    tmc5240_writeRegister(ctx->icID, TMC5240_CHOPCONF, 0x00010053);
+
+    tmc5240_writeRegister(ctx->icID, TMC5240_AMAX, ctx->amax);
+    tmc5240_writeRegister(ctx->icID, TMC5240_DMAX, ctx->dmax);
+    tmc5240_writeRegister(ctx->icID, TMC5240_VMAX, ctx->vmax);
+
+    tmc5240_writeRegister(ctx->icID, TMC5240_RAMPMODE,
+                          TMC5240_MODE_POSITION);
+
+    tmc5240_writeRegister(ctx->icID, TMC5240_XACTUAL, 0);
+}
+
+static void tmc5240_enable(Stepper *s, bool en)
+{
+    TMC5240_Context *ctx = s->hw_context;
+    tmc5240_writeRegister(ctx->icID,
+                          TMC5240_GCONF,
+                          en ? 0x00000008 : 0x00000000);
+}
+
+static void tmc5240_set_dir(Stepper *s, bool dir)
+{
+    TMC5240_Context *ctx = s->hw_context;
+    tmc5240_writeRegister(ctx->icID,
+        TMC5240_RAMPMODE,
+        dir ? TMC5240_MODE_VELPOS : TMC5240_MODE_VELNEG);
+}
+
+static void tmc5240_step_pulse(Stepper *s)
+{
+    (void)s;
+    /* No-op: internal ramp generator */
+}
+
+static void tmc5240_move_to(Stepper *s, int32_t pos)
+{
+    TMC5240_Context *ctx = s->hw_context;
+    tmc5240_writeRegister(ctx->icID,
+                          TMC5240_RAMPMODE,
+                          TMC5240_MODE_POSITION);
+    tmc5240_writeRegister(ctx->icID,
+                          TMC5240_XTARGET,
+                          pos);
+}
+
+static int32_t tmc5240_get_position(Stepper *s)
+{
+    TMC5240_Context *ctx = s->hw_context;
+    return tmc5240_readRegister(ctx->icID, TMC5240_XACTUAL);
+}
+
+static bool tmc5240_position_reached(Stepper *s)
+{
+    TMC5240_Context *ctx = s->hw_context;
+    uint32_t st = tmc5240_readRegister(ctx->icID, TMC5240_RAMPSTAT);
+    return (st & TMC5240_POSITION_REACHED_MASK) != 0;
+}
+
+/* --------------------------------------------------------------------------
+ * Public StepperDriver instance
+ * -------------------------------------------------------------------------- */
+
+const StepperDriver TMC5240_Driver = {
+    .caps = STEPPER_CAP_MOVE_TO | 
+            STEPPER_CAP_POSITION_FB,
+    .init             = tmc5240_init,
+    .set_enable       = tmc5240_enable,
+    .set_dir          = tmc5240_set_dir,
+    .step_pulse       = tmc5240_step_pulse,
+    .move_to          = tmc5240_move_to,
+    .get_position     = tmc5240_get_position,
+    .position_reached = tmc5240_position_reached,
+};
+
+/* --------------------------------------------------------------------------
+ * Debug helpers
+ * -------------------------------------------------------------------------- */
+
+void tmc5240_driver_print_registers(const TMC5240_Context *ctx)
+{
+    if (!ctx)
+        return;
+
+    printf("\nTMC5240[%u] registers:\n", ctx->icID);
+
+#define R(r) printf("  %-12s 0x%08lX\n", #r, \
+    (unsigned long)tmc5240_readRegister(ctx->icID, r))
+
+    R(TMC5240_GCONF);
+    R(TMC5240_GSTAT);
+    R(TMC5240_IHOLD_IRUN);
+    R(TMC5240_CHOPCONF);
+    R(TMC5240_AMAX);
+    R(TMC5240_DMAX);
+    R(TMC5240_VMAX);
+    R(TMC5240_RAMPMODE);
+    R(TMC5240_XACTUAL);
+    R(TMC5240_XTARGET);
+    R(TMC5240_VACTUAL);
+    R(TMC5240_DRVSTATUS);
+
+#undef R
+}

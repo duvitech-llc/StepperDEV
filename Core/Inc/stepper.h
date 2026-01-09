@@ -4,62 +4,104 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/* ============================================================================
+ *  Forward Declarations
+ * ========================================================================== */
 
-/* Forward declaration */
 struct Stepper;
 
-/* Completion callback */
+/* ============================================================================
+ *  Callbacks
+ * ========================================================================== */
+
+/* Motion completed callback */
 typedef void (*StepperDoneCallback)(struct Stepper *stepper);
 
 /* Limit switch callback */
 typedef void (*StepperLimitCallback)(struct Stepper *stepper, void *sw);
 
-/* Hardware driver interface */
+/* ============================================================================
+ *  Driver Capability Flags
+ * ========================================================================== */
+
+typedef enum
+{
+    STEPPER_CAP_STEP_DIR      = (1u << 0), /* STEP/DIR pulse driven */
+    STEPPER_CAP_MOVE_TO       = (1u << 1), /* Driver supports absolute move */
+    STEPPER_CAP_POSITION_FB   = (1u << 2), /* Driver reports position */
+    STEPPER_CAP_LIMITS        = (1u << 3)  /* Driver handles limit switches */
+} StepperCaps;
+
+/* ============================================================================
+ *  Hardware Driver Interface
+ * ========================================================================== */
+
 typedef struct
 {
-    /* Optional driver init hook */
+    uint32_t caps;
+
+    /* Optional lifecycle hook */
     void (*init)(struct Stepper *stepper);
 
+    /* Enable / disable driver */
     void (*set_enable)(struct Stepper *stepper, bool enable);
+
+    /* STEP/DIR mode (required if STEPPER_CAP_STEP_DIR is set) */
     void (*set_dir)(struct Stepper *stepper, bool dir);
     void (*step_pulse)(struct Stepper *stepper);
 
-    /* Optional: move to absolute position (for drivers with internal ramp generators) */
+    /* Smart-driver motion (required if STEPPER_CAP_MOVE_TO is set) */
     void (*move_to)(struct Stepper *stepper, int32_t position);
 
-    /* Optional: get current position from driver */
+    /* Driver-owned position feedback (required if STEPPER_CAP_POSITION_FB) */
     int32_t (*get_position)(struct Stepper *stepper);
 
-    /* Optional: check if position reached */
+    /* Completion check (required if STEPPER_CAP_MOVE_TO) */
     bool (*position_reached)(struct Stepper *stepper);
+
 } StepperDriver;
 
-/* Stepper instance */
+/* ============================================================================
+ *  Stepper Instance
+ * ========================================================================== */
+
 typedef struct Stepper
 {
-    uint8_t stepper_id;      /* User-defined ID */
+    /* Identity */
+    uint8_t stepper_id;
 
+    /* Driver binding */
     const StepperDriver *driver;
     void *hw_context;
 
-    int32_t position;
-    int32_t steps_remaining;
-
+    /* Motion request state */
+    int32_t target_position;     /* Absolute target */
+    int32_t steps_remaining;     /* STEP/DIR only */
     bool direction;
 
+    /* Timing (STEP/DIR only) */
     uint32_t us_per_step;
     uint32_t us_accumulator;
 
+    /* State flags */
+    bool enabled;
+    bool busy;
+
+    /* Callbacks */
     StepperDoneCallback done_cb;
-    
-    /* Limit switch support */
+
+    /* Limit switch handling */
     bool limits_enabled;
     bool limit_hit;
     StepperLimitCallback limit_cb;
+
 } Stepper;
 
-/* Stepper group */
-#define STEPPER_GROUP_MAX 4
+/* ============================================================================
+ *  Stepper Group
+ * ========================================================================== */
+
+#define STEPPER_GROUP_MAX  4
 
 typedef struct
 {
@@ -67,92 +109,134 @@ typedef struct
     uint8_t count;
 } StepperGroup;
 
-/* --------------------------------------------------------------------------
- *  Stepper API – thin wrappers that forward to the driver implementation.
- * -------------------------------------------------------------------------- */
+/* ============================================================================
+ *  Low-Level Stepper API (ISR-safe, non-blocking)
+ * ========================================================================== */
 
+/*
+ * Initialize a stepper instance
+ */
 void stepper_init(Stepper *stepper,
                   uint8_t stepper_id,
                   const StepperDriver *driver,
                   void *hw_context);
 
+/*
+ * Enable or disable the motor driver
+ */
 void stepper_enable(Stepper *stepper, bool enable);
 
-void stepper_set_steps(Stepper *stepper, int32_t steps);
-
+/*
+ * Set step rate (STEP/DIR drivers only)
+ */
 void stepper_set_speed(Stepper *stepper, uint32_t us_per_step);
 uint32_t stepper_get_speed(const Stepper *stepper);
 
-int32_t stepper_get_steps(const Stepper *stepper);
+/*
+ * Command absolute move
+ * - Uses driver internal motion if supported
+ * - Falls back to STEP/DIR stepping otherwise
+ */
+void stepper_move_to_position(Stepper *stepper, int32_t position);
 
+/*
+ * Update motor state
+ * - Call periodically with elapsed microseconds
+ * - Returns true if motor is still moving
+ */
+bool stepper_update(Stepper *stepper, uint32_t delta_us);
+
+/*
+ * Query driver-owned position
+ */
+int32_t stepper_get_position(Stepper *stepper);
+
+/*
+ * Check if motion is complete
+ */
+bool stepper_position_reached(Stepper *stepper);
+
+/*
+ * Register completion callback
+ */
 void stepper_set_done_callback(Stepper *stepper,
                                StepperDoneCallback cb);
 
-bool stepper_update(Stepper *stepper, uint32_t delta_us);
+/* ============================================================================
+ *  High-Level Stepper API (Application / Blocking)
+ * ========================================================================== */
 
-/* Move to absolute position (for drivers with internal motion controllers) */
-void stepper_move_to_position(Stepper *stepper, int32_t position);
-
-/* Get current position from driver */
-int32_t stepper_get_position(Stepper *stepper);
-
-/* Check if target position has been reached */
-bool stepper_position_reached(Stepper *stepper);
-
-
-/* --------------------------------------------------------------------------
- *  Generalized Stepper API - Higher-level abstraction
- * -------------------------------------------------------------------------- */
-
-/* Initialize stepper (generic initialization wrapper) */
+/*
+ * Generic initialization wrapper
+ */
 void Stepper_init(void *context);
 
-/* Set acceleration (implementation-dependent units) */
-void Stepper_setAcceleration(volatile Stepper *s, float a);
+/*
+ * Set acceleration (implementation-defined units)
+ */
+void Stepper_setAcceleration(volatile Stepper *s, float accel);
 
-/* Check if motor is currently moving */
+/*
+ * Check if motor is currently moving
+ */
 bool Stepper_isMoving(volatile Stepper *s);
 
-/* Move to absolute position */
-void Stepper_move(volatile Stepper *s, int32_t position);
-
-/* Stop motor motion */
-void Stepper_stop(volatile Stepper *s);
-
-/* Start/enable motor */
+/*
+ * Start motion (enable motor if needed)
+ */
 void Stepper_start(volatile Stepper *s);
 
-/* Wait for motor to stop (with timeout in ms, 0 = wait forever) */
-void Stepper_awaitStop(volatile Stepper *s, uint32_t timeout);
+/*
+ * Stop motor motion immediately
+ */
+void Stepper_stop(volatile Stepper *s);
 
-/* Wait for limit switch (with timeout in ms, returns true if limit hit) */
-bool Stepper_awaitLimit(volatile Stepper *s, uint32_t timeout);
-
-/* Enable limit switch handling */
-void Stepper_enableLimits(volatile Stepper *s);
-
-/* Callback when limit switch is hit */
-void Stepper_hitLimit(volatile Stepper *s, void *sw);
-
-/* Disable motor */
+/*
+ * Disable motor driver
+ */
 void Stepper_disable(volatile Stepper *s);
 
-/* Get positions of all steppers in system */
+/*
+ * Move to absolute position
+ */
+void Stepper_move(volatile Stepper *s, int32_t position);
+
+/*
+ * Wait for motor to stop
+ * timeout_ms = 0 → wait forever
+ */
+void Stepper_awaitStop(volatile Stepper *s, uint32_t timeout_ms);
+
+/*
+ * Enable limit switch handling
+ */
+void Stepper_enableLimits(volatile Stepper *s);
+
+/*
+ * Limit switch event handler
+ */
+void Stepper_hitLimit(volatile Stepper *s, void *sw);
+
+/*
+ * Wait for limit switch event
+ * Returns true if limit was hit before timeout
+ */
+bool Stepper_awaitLimit(volatile Stepper *s, uint32_t timeout_ms);
+
+/*
+ * Get array of current positions for all steppers
+ */
 int32_t *Stepper_positions(void);
 
-
-/* --------------------------------------------------------------------------
- *  Group API – applies the generic API to every motor in the group.
- * -------------------------------------------------------------------------- */
+/* ============================================================================
+ *  Stepper Group API
+ * ========================================================================== */
 
 void stepper_group_init(StepperGroup *group);
 bool stepper_group_add(StepperGroup *group, Stepper *stepper);
 
 void stepper_group_enable(StepperGroup *group, bool enable);
-void stepper_group_set_steps(StepperGroup *group, int32_t steps);
-void stepper_group_set_speed(StepperGroup *group, uint32_t us_per_step);
-
+void stepper_group_move_to(StepperGroup *group, int32_t position);
 bool stepper_group_update(StepperGroup *group, uint32_t delta_us);
-void stepper_group_move_by(StepperGroup *group, int32_t steps);
 
-#endif // STEPPER_H
+#endif /* STEPPER_H */

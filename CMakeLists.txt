@@ -46,6 +46,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     Core/Src/tmc5240.c
+    Core/Src/tmc5240_driver.c
     Core/Src/util.c
     Core/Src/jsmn.c
     Core/Src/lwrb.c

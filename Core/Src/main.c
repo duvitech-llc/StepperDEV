@@ -147,28 +147,27 @@ int main(void)
   /* Initialize stepper motors using the abstracted API */
   printf("Initializing steppers via stepper API...\r\n");
   stepper_config_init();
-
-  /* Get stepper group and stepper instances */
-  StepperGroup *group = stepper_config_get_group();
-  Stepper *stepper0 = stepper_config_get_stepper(STEPPER_0);
-  Stepper *stepper1 = stepper_config_get_stepper(STEPPER_1);
-
-  printf("Configured Motor 0\r\n");
-  printf("Configured Motor 1\r\n");
-
-  /* Ensure both steppers are in the group (should already be added in config init) */
-  stepper_group_add(group, stepper0);
-  stepper_group_add(group, stepper1);
+  
 
 #endif
 
   /* Print register configurations using stepper API */
-  stepper_config_print_registers(stepper0);
-  stepper_config_print_registers(stepper1);
+  
+  Stepper *s0 = stepper_config_get_stepper(STEPPER_0);
+  Stepper *s1 = stepper_config_get_stepper(STEPPER_1);
 
-  // Enable Motor using stepper API
-  stepper_config_enable_drivers(true);
+  StepperGroup *z_axis = stepper_config_get_group();
+
+  stepper_config_print_registers(s0);
+  stepper_config_print_registers(s1);
+
+  stepper_enable(s0, true);
+  stepper_enable(s1, true);
+
   motorEnabled = true;
+
+  stepper_group_move_to(z_axis, 5000);
+
 
   printf("Entering Main LOOP.\r\n\r\n");
   /* USER CODE END 2 */
@@ -503,8 +502,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     if(b2Kstep)
     {
-      StepperGroup *group = stepper_config_get_group();
-      stepper_group_move_by(group, 2000);
+      //StepperGroup *group = stepper_config_get_group();
+      //stepper_group_move_by(group, 2000);
       printf("Stepper group: all moving +2000 steps synchronously\r\n");
     }
   }
