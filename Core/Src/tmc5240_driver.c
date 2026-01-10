@@ -93,6 +93,8 @@ static void tmc5240_init(Stepper *s)
 static void tmc5240_enable(Stepper *s, bool en)
 {
     TMC5240_Context *ctx = s->hw_context;
+
+    HAL_GPIO_WritePin(ctx->enable_port, ctx->enable_pin, en ? GPIO_PIN_RESET : GPIO_PIN_SET);
     tmc5240_writeRegister(ctx->icID,
                           TMC5240_GCONF,
                           en ? 0x00000008 : 0x00000000);

@@ -21,6 +21,9 @@ typedef struct
     GPIO_TypeDef *cs_port;
     uint16_t cs_pin;
 
+    GPIO_TypeDef *enable_port;
+    uint16_t enable_pin;
+
     /* Motion parameters */
     uint32_t vmax;
     uint32_t amax;
