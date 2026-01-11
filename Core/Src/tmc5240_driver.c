@@ -76,17 +76,28 @@ static void tmc5240_init(Stepper *s)
     TMC5240_Context *ctx = s->hw_context;
     tmc_ctx_table[ctx->icID] = ctx;
 
+    /* Core driver configuration - matches working main.c */
     tmc5240_writeRegister(ctx->icID, TMC5240_GCONF, 0x00000008);
+    tmc5240_writeRegister(ctx->icID, TMC5240_DRV_CONF, 0x00000020);
+    tmc5240_writeRegister(ctx->icID, TMC5240_GLOBAL_SCALER, 0x00000000);
+    
+    /* Motor current configurations */
     tmc5240_writeRegister(ctx->icID, TMC5240_IHOLD_IRUN, 0x00070A03);
-    tmc5240_writeRegister(ctx->icID, TMC5240_CHOPCONF, 0x00010053);
+    tmc5240_writeRegister(ctx->icID, TMC5240_TPOWERDOWN, 0x0000000A);
+    
+    /* Chopper configuration - CRITICAL: use full value from working code */
+    tmc5240_writeRegister(ctx->icID, TMC5240_CHOPCONF, 0x10410153);
 
+    /* Motion parameters */
     tmc5240_writeRegister(ctx->icID, TMC5240_AMAX, ctx->amax);
     tmc5240_writeRegister(ctx->icID, TMC5240_DMAX, ctx->dmax);
     tmc5240_writeRegister(ctx->icID, TMC5240_VMAX, ctx->vmax);
+    tmc5240_writeRegister(ctx->icID, TMC5240_TVMAX, 0x00000F8D);
 
-    tmc5240_writeRegister(ctx->icID, TMC5240_RAMPMODE,
-                          TMC5240_MODE_POSITION);
-
+    /* Position mode */
+    tmc5240_writeRegister(ctx->icID, TMC5240_RAMPMODE, TMC5240_MODE_POSITION);
+    
+    /* Reset position */
     tmc5240_writeRegister(ctx->icID, TMC5240_XACTUAL, 0);
 }
 

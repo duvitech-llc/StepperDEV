@@ -502,7 +502,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     if(b2Kstep)
     {
-      stepper_group_move_to(z_axis, 2000);
+      int32_t curr_pos = stepper_get_position(s0);
+      if(curr_pos < 2000) curr_pos = 0;
+      stepper_group_move_to(z_axis, curr_pos + 2000);
       printf("Stepper group: all moving +2000 steps synchronously\r\n");
     }
   }

@@ -96,7 +96,8 @@ void stepper_config_init(void)
                      cfg->driver,
                      cfg->context);
 
-        stepper_enable(s, true);
+        /* Don't enable here - let main do it after printing registers */
+        /* stepper_enable(s, true); */
 
         stepper_group_add(&stepper_group, s);
 
