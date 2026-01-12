@@ -50,6 +50,7 @@ void tmc5240_driver_print_registers(const TMC5240_Context *ctx);
 void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength);
 bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data,
                            size_t writeLength, size_t readLength);
+void tmc5240_fast_writeSPI(uint16_t icID, uint8_t *data, size_t len);
 
 TMC5240BusType tmc5240_getBusType(uint16_t icID);
 uint8_t tmc5240_getNodeAddress(uint16_t icID);

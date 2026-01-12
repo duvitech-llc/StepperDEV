@@ -1,4 +1,5 @@
 #include "tmc5240_driver.h"
+#include "util.h"
 #include <stdio.h>
 
 /* --------------------------------------------------------------------------
@@ -41,6 +42,21 @@ void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t len)
 
     for (size_t i = 0; i < len; i++)
         data[i] = rx[i];
+}
+
+void tmc5240_fast_writeSPI(uint16_t icID, uint8_t *data, size_t len)
+{
+    TMC5240_Context *ctx = ctx_from_id(icID);
+    if (!ctx || !ctx->hspi)
+        return;
+
+    uint8_t rx[5] = {0};
+
+    HAL_GPIO_WritePin(ctx->cs_port, ctx->cs_pin, GPIO_PIN_RESET);
+
+    HAL_SPI_TransmitReceive(ctx->hspi, data, rx, len, HAL_MAX_DELAY);
+
+    HAL_GPIO_WritePin(ctx->cs_port, ctx->cs_pin, GPIO_PIN_SET);
 }
 
 bool tmc5240_readWriteUART(uint16_t icID,

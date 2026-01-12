@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <util.h>
+
+#include "tmc5240_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -71,6 +73,7 @@ static void MX_CRC_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
+
 
 /* USER CODE END PFP */
 
@@ -502,10 +505,63 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     if(b2Kstep)
     {
+
       int32_t curr_pos = stepper_get_position(s0);
       if(curr_pos < 2000) curr_pos = 0;
+#if 1
       stepper_group_move_to(z_axis, curr_pos + 2000);
+      printf("Stepper group: all moving +2000 steps synchronously\r\n"); 
+      
+      /* Simulate group move to apprximate timing*/
+      /*
+      stepper_move_to_position(s0, curr_pos + 2000);
+      uint32_t s0_complete_time = DWT->CYCCNT;
+      stepper_move_to_position(s1, curr_pos + 2000);
+      uint32_t s1_complete_time = DWT->CYCCNT;
+
+      printf("Stepper group: all moving +2000 steps synchronously\r\n"); 
+      
+      uint32_t delay_ticks = (s1_complete_time > s0_complete_time) ? 
+                          (s1_complete_time - s0_complete_time) : 
+                          (s0_complete_time - s1_complete_time);
+      uint32_t cycles_per_us = SystemCoreClock / 1000000;
+      uint32_t delay_us = delay_ticks / cycles_per_us;
+      printf("Both motors completed. Delay between start: %lu us\r\n", delay_us);  // 64 uS
+      */
+
+#else
+      // TMC5240_MODE_HOLD;
+      tmc5240_writeRegister(((TMC5240_Context *)s0->hw_context)->icID, TMC5240_RAMPMODE, TMC5240_MODE_HOLD);  
+      tmc5240_writeRegister(((TMC5240_Context *)s1->hw_context)->icID, TMC5240_RAMPMODE, TMC5240_MODE_HOLD);  
+
+      tmc5240_writeRegister(((TMC5240_Context *)s0->hw_context)->icID, TMC5240_XACTUAL, curr_pos + 2000);       // TMC5240_XACTUAL
+      tmc5240_writeRegister(((TMC5240_Context *)s1->hw_context)->icID, TMC5240_XACTUAL, curr_pos + 2000);       // TMC5240_XACTUAL
+
+      uint8_t data[5] = { 0 };
+
+      data[0] = TMC5240_RAMPMODE | TMC5240_WRITE_BIT;
+      data[1] = 0xFF & (TMC5240_MODE_POSITION>>24);
+      data[2] = 0xFF & (TMC5240_MODE_POSITION>>16);
+      data[3] = 0xFF & (TMC5240_MODE_POSITION>>8);
+      data[4] = 0xFF & (TMC5240_MODE_POSITION>>0);
+
+      
+      tmc5240_fast_writeSPI(((TMC5240_Context *)s0->hw_context)->icID, &data[0], 5);  
+      uint32_t s0_complete_time = DWT->CYCCNT;
+      tmc5240_fast_writeSPI(((TMC5240_Context *)s1->hw_context)->icID, &data[0], 5);  
+      uint32_t s1_complete_time = DWT->CYCCNT;
+
       printf("Stepper group: all moving +2000 steps synchronously\r\n");
+      
+      
+      uint32_t delay_ticks = (s1_complete_time > s0_complete_time) ? 
+                          (s1_complete_time - s0_complete_time) : 
+                          (s0_complete_time - s1_complete_time);
+      uint32_t cycles_per_us = SystemCoreClock / 1000000;
+      uint32_t delay_us = delay_ticks / cycles_per_us;
+      printf("Both motors completed. Delay between start: %lu us\r\n", delay_us);  // 31 uS std read/write 22 uS with fast write
+
+#endif
     }
   }
 }
