@@ -713,9 +713,9 @@
 #define TMC5240_FSACTIVE_MASK                   0x8000 // DRV_STATUS // full step active indicator
 #define TMC5240_FSACTIVE_SHIFT                  15 // full step active indicator
 #define TMC5240_FSACTIVE_FIELD                  ((RegisterField) { TMC5240_FSACTIVE_MASK, TMC5240_FSACTIVE_SHIFT, TMC5240_DRVSTATUS, false})
-#define TMC5240_CS_ACTUAL_MASK                  0x1F0000 // DRV_STATUS // actual motor current / smart energy current; Actual current control scaling, for monitoring smart energy current scaling controlled via settings in register COOLCONF, or for monitoring the function of the automatic current scaling
-#define TMC5240_CS_ACTUAL_SHIFT                 16 // actual motor current / smart energy current; Actual current control scaling, for monitoring smart energy current scaling controlled via settings in register COOLCONF, or for monitoring the function of the automatic current scaling
-#define TMC5240_CS_ACTUAL_FIELD                 ((RegisterField) { TMC5240_CS_ACTUAL_MASK, TMC5240_CS_ACTUAL_SHIFT, TMC5240_DRVSTATUS, false})
+#define STEP1_CS_ACTUAL_MASK                  0x1F0000 // DRV_STATUS // actual motor current / smart energy current; Actual current control scaling, for monitoring smart energy current scaling controlled via settings in register COOLCONF, or for monitoring the function of the automatic current scaling
+#define STEP1_CS_ACTUAL_SHIFT                 16 // actual motor current / smart energy current; Actual current control scaling, for monitoring smart energy current scaling controlled via settings in register COOLCONF, or for monitoring the function of the automatic current scaling
+#define STEP1_CS_ACTUAL_FIELD                 ((RegisterField) { STEP1_CS_ACTUAL_MASK, STEP1_CS_ACTUAL_SHIFT, TMC5240_DRVSTATUS, false})
 #define TMC5240_STALLGUARD_MASK                 0x1000000 // DRV_STATUS // StallGuard2/StallGuard4 status
 #define TMC5240_STALLGUARD_SHIFT                24 // StallGuard2/StallGuard4 status
 #define TMC5240_STALLGUARD_FIELD                ((RegisterField) { TMC5240_STALLGUARD_MASK, TMC5240_STALLGUARD_SHIFT, TMC5240_DRVSTATUS, false})
