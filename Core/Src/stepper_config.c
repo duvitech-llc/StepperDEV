@@ -136,7 +136,7 @@ void stepper_config_print_registers(Stepper *stepper)
      * SPI timing issues when querying multiple registers quickly. */
 #define READ_PRINT(reg, label)                         \
     do {                                              \
-        value = tmc5240_readRegister(icID, (reg));    \
+        value = tmc5240_readRegister(icID, (reg), false);    \
         printf("  %-14s 0x%08lX\r\n", (label), (unsigned long)value); \
         for (volatile int _d = 0; _d < 50; _d++);     \
     } while (0)

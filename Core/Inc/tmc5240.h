@@ -42,14 +42,14 @@ typedef struct
 
 
 // => TMC-API wrapper
-extern void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength);
+extern void tmc5240_readWriteSPI(uint16_t icID, uint8_t *data, size_t dataLength, bool cs_override);
 extern bool tmc5240_readWriteUART(uint16_t icID, uint8_t *data, size_t writeLength, size_t readLength);
 extern TMC5240BusType tmc5240_getBusType(uint16_t icID);
 extern uint8_t tmc5240_getNodeAddress(uint16_t icID);
 // => TMC-API wrapper
 
-int32_t tmc5240_readRegister(uint16_t icID, uint8_t address);
-void tmc5240_writeRegister(uint16_t icID, uint8_t address, int32_t value);
+int32_t tmc5240_readRegister(uint16_t icID, uint8_t address, bool cs_override);
+void tmc5240_writeRegister(uint16_t icID, uint8_t address, int32_t value, bool cs_override);
 void tmc5240_rotateMotor(uint16_t icID, int32_t velocity);
 
 
@@ -70,7 +70,7 @@ static inline uint32_t tmc5240_fieldExtract(uint32_t data, RegisterField field)
 
 static inline uint32_t tmc5240_fieldRead(uint16_t icID, RegisterField field)
 {
-    uint32_t value = tmc5240_readRegister(icID, field.address);
+    uint32_t value = tmc5240_readRegister(icID, field.address, false);
     return tmc5240_fieldExtract(value, field);
 }
 
@@ -81,11 +81,11 @@ static inline uint32_t tmc5240_fieldUpdate(uint32_t data, RegisterField field, u
 
 static inline void tmc5240_fieldWrite(uint16_t icID, RegisterField field, uint32_t value)
 {
-    uint32_t regValue = tmc5240_readRegister(icID, field.address);
+    uint32_t regValue = tmc5240_readRegister(icID, field.address, false);
 
     regValue = tmc5240_fieldUpdate(regValue, field, value);
 
-    tmc5240_writeRegister(icID, field.address, regValue);
+    tmc5240_writeRegister(icID, field.address, regValue, false);
 }
 
 /**************************************************************** DEFAULT REGISTER VALUES *************************************************************************/

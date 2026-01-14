@@ -107,6 +107,7 @@ typedef struct
 {
     Stepper *steppers[STEPPER_GROUP_MAX];
     uint8_t count;
+    bool synch_capable; // true if all steppers are on unique SPI busses
 } StepperGroup;
 
 /* ============================================================================

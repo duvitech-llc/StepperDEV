@@ -35,19 +35,19 @@ const uint8_t tmcCRCTable_Poly7Reflected[256] = {
 
 /************************************************************** Register read / write Implementation ******************************************************************/
 
-static int32_t readRegisterSPI(uint16_t icID, uint8_t address);
-static void writeRegisterSPI(uint16_t icID, uint8_t address, int32_t value);
+static int32_t readRegisterSPI(uint16_t icID, uint8_t address, bool cs_override);
+static void writeRegisterSPI(uint16_t icID, uint8_t address, int32_t value, bool cs_override);
 static int32_t readRegisterUART(uint16_t icID, uint8_t registerAddress);
 static void writeRegisterUART(uint16_t icID, uint8_t registerAddress, int32_t value);
 static uint8_t CRC8(uint8_t *data, uint32_t bytes);
 
-int32_t tmc5240_readRegister(uint16_t icID, uint8_t address)
+int32_t tmc5240_readRegister(uint16_t icID, uint8_t address, bool cs_override)
 {
     TMC5240BusType bus = tmc5240_getBusType(icID);
 
     if(bus == IC_BUS_SPI)
     {
-        return readRegisterSPI(icID, address);
+        return readRegisterSPI(icID, address, cs_override);
     }
     else if (bus == IC_BUS_UART)
     {
@@ -56,13 +56,13 @@ int32_t tmc5240_readRegister(uint16_t icID, uint8_t address)
     return -1;
 }
 
-void tmc5240_writeRegister(uint16_t icID, uint8_t address, int32_t value)
+void tmc5240_writeRegister(uint16_t icID, uint8_t address, int32_t value, bool cs_override)
 {
     TMC5240BusType bus = tmc5240_getBusType(icID);
 
     if(bus == IC_BUS_SPI)
     {
-        writeRegisterSPI(icID, address, value);
+        writeRegisterSPI(icID, address, value, cs_override);
     }
     else if (bus == IC_BUS_UART)
     {
@@ -70,7 +70,7 @@ void tmc5240_writeRegister(uint16_t icID, uint8_t address, int32_t value)
     }
 }
 
-int32_t readRegisterSPI(uint16_t icID, uint8_t address)
+int32_t readRegisterSPI(uint16_t icID, uint8_t address, bool cs_override)
 {
     uint8_t data[5] = { 0 };
 
@@ -78,18 +78,18 @@ int32_t readRegisterSPI(uint16_t icID, uint8_t address)
     data[0] = address & TMC5240_ADDRESS_MASK;
 
     // Send the read request
-    tmc5240_readWriteSPI(icID, &data[0], sizeof(data));
+    tmc5240_readWriteSPI(icID, &data[0], sizeof(data), cs_override);
 
     // Rewrite address and clear write bit
     data[0] = address & TMC5240_ADDRESS_MASK;
 
     // Send another request to receive the read reply
-    tmc5240_readWriteSPI(icID, &data[0], sizeof(data));
+    tmc5240_readWriteSPI(icID, &data[0], sizeof(data), cs_override);
 
     return ((int32_t)data[1] << 24) | ((int32_t) data[2] << 16) | ((int32_t) data[3] <<  8) | ((int32_t) data[4]);
 }
 
-void writeRegisterSPI(uint16_t icID, uint8_t address, int32_t value)
+void writeRegisterSPI(uint16_t icID, uint8_t address, int32_t value, bool cs_override)
 {
     uint8_t data[5] = { 0 };
 
@@ -100,7 +100,7 @@ void writeRegisterSPI(uint16_t icID, uint8_t address, int32_t value)
     data[4] = 0xFF & (value>>0);
 
     // Send the write request
-    tmc5240_readWriteSPI(icID, &data[0], sizeof(data));
+    tmc5240_readWriteSPI(icID, &data[0], sizeof(data), cs_override);
 }
 
 /* UART functions - currently unused, kept for future UART mode support */
@@ -160,7 +160,7 @@ void tmc5240_rotateMotor(uint16_t icID, int32_t velocity)
     if(icID >= TMC5240_MOTORS)
         return;
 
-    tmc5240_writeRegister(icID, TMC5240_VMAX, (velocity < 0) ? -velocity : velocity);
+    tmc5240_writeRegister(icID, TMC5240_VMAX, (velocity < 0) ? -velocity : velocity, false);
     tmc5240_fieldWrite(icID, TMC5240_RAMPMODE_FIELD, (velocity >= 0) ? TMC5240_MODE_VELPOS : TMC5240_MODE_VELNEG);
 }
 
