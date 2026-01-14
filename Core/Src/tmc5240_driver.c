@@ -117,6 +117,7 @@ static void tmc5240_init(Stepper *s)
     
     /* Reset position */
     tmc5240_writeRegister(ctx->icID, TMC5240_XACTUAL, 0, false);
+    tmc5240_writeRegister(ctx->icID, TMC5240_XTARGET, 0, false);
 }
 
 static void tmc5240_enable(Stepper *s, bool en)

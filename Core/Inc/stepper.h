@@ -108,6 +108,9 @@ typedef struct
     Stepper *steppers[STEPPER_GROUP_MAX];
     uint8_t count;
     bool synch_capable; // true if all steppers are on unique SPI busses
+    bool synch_cs;      // true if all CS are on the same port
+    void *synch_cs_port; // port for group CS if synch_cs
+    uint16_t synch_cs_mask;      // mask for group CS if synch_cs
 } StepperGroup;
 
 /* ============================================================================

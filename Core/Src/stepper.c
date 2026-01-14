@@ -333,6 +333,23 @@ bool stepper_group_add(StepperGroup *group, Stepper *stepper)
         if (!all_unique) break;
     }
     group->synch_capable = all_unique && group->count > 1;
+
+    // Check if all CS are on the same port and build mask
+    group->synch_cs = true;
+    group->synch_cs_port = NULL;
+    group->synch_cs_mask = 0;
+    for (uint8_t i = 0; i < group->count; i++) {
+        Stepper *s = group->steppers[i];
+        if (!s || !s->hw_context) continue;
+        TMC5240_Context *ctx = (TMC5240_Context *)s->hw_context;
+        if (group->synch_cs_port == NULL) {
+            group->synch_cs_port = ctx->cs_port;
+        } else if (group->synch_cs_port != ctx->cs_port) {
+            group->synch_cs = false;
+        }
+        group->synch_cs_mask |= ctx->cs_pin;
+    }
+    if (group->count < 2) group->synch_cs = false;
     return true;
 }
 
@@ -353,11 +370,15 @@ void stepper_group_move_to(StepperGroup *group, int32_t position)
     if (group->synch_capable) {
         // Simultaneous: set all CS low
         printf("synchronous move to %ld\r\n", (long)position);
-        for (uint8_t i = 0; i < group->count; i++) {
-            Stepper *s = group->steppers[i];
-            if (!s || !s->hw_context) continue;
-            TMC5240_Context *ctx = (TMC5240_Context *)s->hw_context;
-            HAL_GPIO_WritePin(ctx->cs_port, ctx->cs_pin, GPIO_PIN_RESET);
+        if (group->synch_cs && group->synch_cs_port && group->synch_cs_mask) {
+            HAL_GPIO_WritePin(group->synch_cs_port, group->synch_cs_mask, GPIO_PIN_RESET);
+        } else {
+            for (uint8_t i = 0; i < group->count; i++) {
+                Stepper *s = group->steppers[i];
+                if (!s || !s->hw_context) continue;
+                TMC5240_Context *ctx = (TMC5240_Context *)s->hw_context;
+                HAL_GPIO_WritePin(ctx->cs_port, ctx->cs_pin, GPIO_PIN_RESET);
+            }
         }
         // Write to all SPI busses (move command, cs_override = true)
         for (uint8_t i = 0; i < group->count; i++) {
@@ -367,15 +388,19 @@ void stepper_group_move_to(StepperGroup *group, int32_t position)
             tmc5240_writeRegister(ctx->icID, TMC5240_RAMPMODE, TMC5240_MODE_POSITION, true);
             tmc5240_writeRegister(ctx->icID, TMC5240_XTARGET, position, true);
         }
-        
+
         uint32_t start_time = DWT->CYCCNT;
 
         // Set all CS high
-        for (uint8_t i = 0; i < group->count; i++) {
-            Stepper *s = group->steppers[i];
-            if (!s || !s->hw_context) continue;
-            TMC5240_Context *ctx = (TMC5240_Context *)s->hw_context;
-            HAL_GPIO_WritePin(ctx->cs_port, ctx->cs_pin, GPIO_PIN_SET);
+        if (group->synch_cs && group->synch_cs_port && group->synch_cs_mask) {
+            HAL_GPIO_WritePin(group->synch_cs_port, group->synch_cs_mask, GPIO_PIN_SET);
+        } else {
+            for (uint8_t i = 0; i < group->count; i++) {
+                Stepper *s = group->steppers[i];
+                if (!s || !s->hw_context) continue;
+                TMC5240_Context *ctx = (TMC5240_Context *)s->hw_context;
+                HAL_GPIO_WritePin(ctx->cs_port, ctx->cs_pin, GPIO_PIN_SET);
+            }
         }
 
         uint32_t end_time = DWT->CYCCNT;

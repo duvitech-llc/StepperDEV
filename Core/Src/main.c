@@ -61,7 +61,6 @@ DMA_HandleTypeDef hdma_usart2_tx;
 /* USER CODE BEGIN PV */
 
 static bool motorEnabled = false;
-static bool b2Kstep = false;
 
 /* USER CODE END PV */
 
@@ -131,34 +130,9 @@ int main(void)
   printf("Duvitech Stepper Demo\r\n\r\n");
   printf("CPU Clock Frequency: %lu MHz\r\n", HAL_RCC_GetSysClockFreq() / 1000000);
 
-#if 0
-  
-  b2Kstep = false;
-  // Motor Configurations
-  writeRegister(icID, TMC5240_GCONF, 0x00000008); 
-  writeRegister(icID, TMC5240_DRV_CONF, 0x00000020); 
-  writeRegister(icID, TMC5240_GLOBAL_SCALER, 0x00000000); 
-
-  // Motor Current configurations
-  writeRegister(icID, TMC5240_IHOLD_IRUN, 0x00070A03);
-  writeRegister(icID, TMC5240_TPOWERDOWN, 0x0000000A);
-  writeRegister(icID, TMC5240_CHOPCONF, 0x10410153);
-  writeRegister(icID, TMC5240_RAMPMODE, 0x1);
-  writeRegister(icID, TMC5240_XACTUAL, 0x00CD79FA);
-  writeRegister(icID, TMC5240_AMAX, 0x00000F8D);
-  writeRegister(icID, TMC5240_DMAX, 0x00000F8D);
-  writeRegister(icID, TMC5240_VMAX, 0x00002710);
-  writeRegister(icID, TMC5240_TVMAX, 0x00000F8D);
-#else
-  
-  b2Kstep = true;
-
   /* Initialize stepper motors using the abstracted API */
   printf("Initializing steppers via stepper API...\r\n");
   stepper_config_init();
-  
-
-#endif
 
   /* Print register configurations using stepper API */
   
@@ -494,10 +468,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(STEP1_CS_GPIO_Port, STEP1_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, STEP1_CS_Pin|STEP2_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, STEP2_CS_Pin|DRV_EN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -505,19 +479,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD2_Pin STEP2_CS_Pin DRV_EN_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin|STEP2_CS_Pin|DRV_EN_Pin;
+  /*Configure GPIO pins : LD2_Pin DRV_EN_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin|DRV_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : STEP1_CS_Pin */
-  GPIO_InitStruct.Pin = STEP1_CS_Pin;
+  /*Configure GPIO pins : STEP1_CS_Pin STEP2_CS_Pin */
+  GPIO_InitStruct.Pin = STEP1_CS_Pin|STEP2_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(STEP1_CS_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
@@ -546,7 +520,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if(GPIO_Pin == B1_Pin)
   {
-    if(b2Kstep)
+    if(motorEnabled)
     {
 
       int32_t curr_pos = stepper_get_position(s0);
