@@ -553,7 +553,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
       if(curr_pos < 2000) curr_pos = 0;
 #if 1
       stepper_group_move_to(z_axis, curr_pos + 2000);
-      printf("Stepper group: all moving +2000 steps synchronously\r\n"); 
+      printf("Stepper group: all moving +2000 "); 
       
       /* Simulate group move to apprximate timing*/
       /*

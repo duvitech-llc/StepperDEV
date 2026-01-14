@@ -352,6 +352,7 @@ void stepper_group_move_to(StepperGroup *group, int32_t position)
 
     if (group->synch_capable) {
         // Simultaneous: set all CS low
+        printf("synchronous move to %ld\r\n", (long)position);
         for (uint8_t i = 0; i < group->count; i++) {
             Stepper *s = group->steppers[i];
             if (!s || !s->hw_context) continue;
@@ -366,6 +367,9 @@ void stepper_group_move_to(StepperGroup *group, int32_t position)
             tmc5240_writeRegister(ctx->icID, TMC5240_RAMPMODE, TMC5240_MODE_POSITION, true);
             tmc5240_writeRegister(ctx->icID, TMC5240_XTARGET, position, true);
         }
+        
+        uint32_t start_time = DWT->CYCCNT;
+
         // Set all CS high
         for (uint8_t i = 0; i < group->count; i++) {
             Stepper *s = group->steppers[i];
@@ -373,8 +377,16 @@ void stepper_group_move_to(StepperGroup *group, int32_t position)
             TMC5240_Context *ctx = (TMC5240_Context *)s->hw_context;
             HAL_GPIO_WritePin(ctx->cs_port, ctx->cs_pin, GPIO_PIN_SET);
         }
+
+        uint32_t end_time = DWT->CYCCNT;
+        uint32_t cycles_per_us = SystemCoreClock / 1000000;
+        uint32_t delay_us = (unsigned long)(end_time - start_time) / cycles_per_us;
+
+        printf("Stepper group move SPI time: %lu uS\r\n", delay_us);
+
     } else {
         // Fallback: sequential
+        printf("sequential move to %ld\r\n", (long)position);
         for (uint8_t i = 0; i < group->count; i++)
             stepper_move_to_position(group->steppers[i], position);
     }

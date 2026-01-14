@@ -33,7 +33,7 @@ static TMC5240_Context tmc5240_ctx[STEPPER_COUNT] =
     },
     {
         .icID = 1,
-        .hspi = &hspi1,
+        .hspi = &hspi2,
         .cs_port = STEP2_CS_GPIO_Port,
         .cs_pin  = STEP2_CS_Pin,
         .enable_port = DRV_EN_GPIO_Port,
